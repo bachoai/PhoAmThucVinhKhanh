@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Quan4CulinaryTourism.Mobile.Views.NearbyPage">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16" Spacing="16">
+            <Label Text="{Binding StatusMessage}" TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
+            <CollectionView ItemsSource="{Binding RadiusOptions}" ItemsLayout="HorizontalList" SelectionMode="Single" SelectedItem="{Binding SelectedRadius}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource ChipBorderStyle}" Margin="0,0,10,0">
+                            <Label Text="{Binding StringFormat='{}{0} m'}" Style="{StaticResource ChipLabel}" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Button Text="Lấy vị trí hiện tại" Command="{Binding LoadNearbyCommand}" />
+
+            <CollectionView ItemsSource="{Binding NearbyPois}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border>
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Name}" Style="{StaticResource SectionTitleLabel}" />
+                                <Label Text="{Binding DisplayAddress}" />
+                                <Border Style="{StaticResource ChipBorderStyle}">
+                                    <Label Text="{Binding DistanceText}" Style="{StaticResource ChipLabel}" />
+                                </Border>
+                                <Button Text="Xem chi tiết"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDetailCommand}"
+                                        CommandParameter="{Binding Id}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

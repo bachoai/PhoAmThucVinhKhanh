@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B35" />
+      <stop offset="100%" stop-color="#2EC4B6" />
+    </linearGradient>
+  </defs>
+  <rect width="720" height="420" rx="36" fill="url(#g)" />
+  <circle cx="150" cy="110" r="64" fill="rgba(255,255,255,0.18)" />
+  <path d="M86 320l106-102 84 68 78-94 186 128H86z" fill="rgba(255,255,255,0.22)" />
+  <text x="50%" y="50%" text-anchor="middle" fill="#ffffff" font-family="OpenSans, Segoe UI, sans-serif" font-size="34" font-weight="700">
+    Quan 4 Culinary Tourism
+  </text>
+  <text x="50%" y="60%" text-anchor="middle" fill="rgba(255,255,255,0.92)" font-family="OpenSans, Segoe UI, sans-serif" font-size="18">
+    Placeholder preview
+  </text>
+</svg>

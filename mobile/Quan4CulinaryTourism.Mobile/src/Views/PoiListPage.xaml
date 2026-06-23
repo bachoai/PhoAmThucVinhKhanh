@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:components="clr-namespace:Quan4CulinaryTourism.Mobile.Components"
+             x:Class="Quan4CulinaryTourism.Mobile.Views.PoiListPage">
+    <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+        <ScrollView>
+            <VerticalStackLayout Padding="20,16" Spacing="16">
+                <SearchBar Text="{Binding SearchKeyword}"
+                           Placeholder="Tìm địa điểm..."
+                           SearchCommand="{Binding SearchCommand}" />
+
+                <components:OfflineBannerView IsOffline="{Binding IsOfflineMode}" />
+
+                <Border>
+                    <VerticalStackLayout Spacing="12">
+                        <Picker Title="Lọc theo danh mục"
+                                ItemsSource="{Binding Categories}"
+                                ItemDisplayBinding="{Binding Name}"
+                                SelectedItem="{Binding SelectedCategory}" />
+                        <Picker Title="Lọc theo mức giá"
+                                ItemsSource="{Binding PriceRanges}"
+                                SelectedItem="{Binding SelectedPriceRange}" />
+                        <Button Text="Áp dụng lọc" Command="{Binding FilterCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <components:LoadingView IsVisible="{Binding IsBusy}" />
+                <Label Text="{Binding EmptyStateMessage}"
+                       TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
+
+                <CollectionView ItemsSource="{Binding Pois}" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <components:PoiCardView Poi="{Binding .}">
+                                <components:PoiCardView.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDetailCommand}"
+                                                          CommandParameter="{Binding Id}" />
+                                </components:PoiCardView.GestureRecognizers>
+                            </components:PoiCardView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

@@ -1,0 +1,202 @@
+namespace Quan4CulinaryTourism.Api.DTOs;
+
+public class AuthResponse
+{
+    public string Token { get; set; } = string.Empty;
+    public CurrentUserResponse User { get; set; } = new();
+}
+
+public class CurrentUserResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? AvatarUrl { get; set; }
+    public List<string> Roles { get; set; } = [];
+    public bool IsActive { get; set; }
+    public bool EmailVerified { get; set; }
+    public string OwnerStatus { get; set; } = string.Empty;
+}
+
+public class UserResponse : CurrentUserResponse
+{
+    public DateTime? LastLoginAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class RoleResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public List<string> Permissions { get; set; } = [];
+}
+
+public class CategoryResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? IconUrl { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class PoiResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string CategoryId { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+    public string Ward { get; set; } = string.Empty;
+    public string District { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string PriceRange { get; set; } = string.Empty;
+    public double Rating { get; set; }
+    public int ReviewCount { get; set; }
+    public int Priority { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public List<string> Tags { get; set; } = [];
+    public List<Quan4CulinaryTourism.Api.Models.PoiImage> Images { get; set; } = [];
+    public bool IsActive { get; set; }
+}
+
+public class PoiDetailResponse : PoiResponse
+{
+    public List<Quan4CulinaryTourism.Api.Models.OpeningHour> OpeningHours { get; set; } = [];
+    public Quan4CulinaryTourism.Api.Models.ContactInfo? ContactInfo { get; set; }
+    public string? OwnerId { get; set; }
+    public string AudioStatus { get; set; } = string.Empty;
+}
+
+public class NearbyPoiResponse : PoiResponse
+{
+    public double DistanceMeters { get; set; }
+}
+
+public class OwnerRegistrationResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
+    public string BusinessName { get; set; } = string.Empty;
+    public string BusinessAddress { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? AdminNote { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class OwnerSubmissionResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string OwnerId { get; set; } = string.Empty;
+    public string? PoiId { get; set; }
+    public string SubmissionType { get; set; } = string.Empty;
+    public string PoiName { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? AdminNote { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class OwnerDashboardResponse
+{
+    public int TotalPois { get; set; }
+    public int TotalSubmissions { get; set; }
+    public int PendingSubmissions { get; set; }
+    public int ApprovedSubmissions { get; set; }
+    public int RejectedSubmissions { get; set; }
+    public long TotalViews { get; set; }
+    public long TotalAudioPlays { get; set; }
+}
+
+public class AdminDashboardResponse
+{
+    public long TotalUsers { get; set; }
+    public long TotalOwners { get; set; }
+    public long TotalPois { get; set; }
+    public long TotalActivePois { get; set; }
+    public long PendingOwnerRegistrations { get; set; }
+    public long PendingSubmissions { get; set; }
+    public long TotalPoiViews { get; set; }
+    public long TotalAudioPlays { get; set; }
+}
+
+public class PoiLocalizationResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string PoiId { get; set; } = string.Empty;
+    public string Lang { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string? AudioUrl { get; set; }
+    public bool IsFallback { get; set; }
+}
+
+public class PoiAudioResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string PoiId { get; set; } = string.Empty;
+    public string Lang { get; set; } = string.Empty;
+    public string AudioUrl { get; set; } = string.Empty;
+    public string? VoiceName { get; set; }
+    public string SourceType { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public double DurationSeconds { get; set; }
+    public long FileSizeBytes { get; set; }
+}
+
+public class AudioLanguageResponse
+{
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+}
+
+public class AnalyticsSummaryResponse
+{
+    public long PoiViewedCount { get; set; }
+    public long AudioPlayedCount { get; set; }
+    public long SearchExecutedCount { get; set; }
+    public List<TopPoiAnalyticsResponse> TopPoiViews { get; set; } = [];
+    public List<TopPoiAnalyticsResponse> TopPoiAudioPlays { get; set; } = [];
+}
+
+public class TopPoiAnalyticsResponse
+{
+    public string PoiId { get; set; } = string.Empty;
+    public long Count { get; set; }
+}
+
+public class MediaFileResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
+    public string OriginalFileName { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+    public string FileType { get; set; } = string.Empty;
+    public long SizeBytes { get; set; }
+}
+
+public class MapPackResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string Version { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string DownloadUrl { get; set; } = string.Empty;
+    public string Sha256 { get; set; } = string.Empty;
+    public long SizeBytes { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime? PublishedAt { get; set; }
+}
+
+public class HealthResponse
+{
+    public string Status { get; set; } = "Healthy";
+    public bool MongoConnected { get; set; }
+    public DateTime ServerTimeUtc { get; set; } = DateTime.UtcNow;
+}

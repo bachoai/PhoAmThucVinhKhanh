@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:components="clr-namespace:Quan4CulinaryTourism.Mobile.Components"
+             x:Class="Quan4CulinaryTourism.Mobile.Views.PoiDetailPage">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16" Spacing="16">
+            <Border Padding="0">
+                <Grid RowDefinitions="240,Auto">
+                    <Image HeightRequest="240"
+                           Aspect="AspectFill"
+                           Source="{Binding Poi.HeroImageUrl}" />
+                    <VerticalStackLayout Grid.Row="1" Padding="18" Spacing="10">
+                        <Label Text="{Binding Poi.Name}" Style="{StaticResource PageTitleLabel}" />
+                        <Label Text="{Binding Poi.DisplayAddress}" TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
+                        <HorizontalStackLayout Spacing="10">
+                            <Border Style="{StaticResource ChipBorderStyle}">
+                                <Label Text="{Binding Poi.PriceRange}" Style="{StaticResource ChipLabel}" />
+                            </Border>
+                            <Border Style="{StaticResource ChipBorderStyle}" BackgroundColor="{StaticResource SecondarySoft}">
+                                <Label Text="{Binding Poi.CategoryName}" Style="{StaticResource ChipLabel}" />
+                            </Border>
+                            <Border Style="{StaticResource ChipBorderStyle}" BackgroundColor="{StaticResource WarningSoft}">
+                                <Label Text="{Binding Poi.RatingText}" Style="{StaticResource ChipLabel}" />
+                            </Border>
+                        </HorizontalStackLayout>
+                        <Label Text="{Binding Poi.Description}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <Label Text="Giờ mở cửa" Style="{StaticResource SectionTitleLabel}" />
+            <CollectionView ItemsSource="{Binding Poi.OpeningHours}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,0,0,8">
+                            <Label Text="{Binding DayOfWeek}" />
+                            <Label Grid.Column="1"
+                                   Text="{Binding OpenTime, StringFormat='{}{0} - '}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <components:AudioPlayerView State="{Binding AudioState}"
+                                        Message="{Binding AudioMessage}"
+                                        PlayCommand="{Binding PlayAudioCommand}"
+                                        PauseCommand="{Binding PauseAudioCommand}"
+                                        StopCommand="{Binding StopAudioCommand}" />
+
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Tải audio offline" Command="{Binding DownloadOfflineAudioCommand}" />
+                <Button Text="Nghe bằng TTS" Command="{Binding SpeakWithTtsCommand}" BackgroundColor="{StaticResource Secondary}" />
+            </HorizontalStackLayout>
+            <Label Text="{Binding OfflineAudioState}" TextColor="{StaticResource Primary}" />
+
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Tìm đường" Command="{Binding OpenDirectionsCommand}" />
+                <Button Text="Xem bản đồ" Command="{Binding OpenOnMapCommand}" BackgroundColor="{StaticResource Secondary}" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

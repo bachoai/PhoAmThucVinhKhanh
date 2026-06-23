@@ -1,0 +1,18 @@
+import axiosClient from './axiosClient';
+import type { ApproveRequest, RejectRequest } from '../types/requests';
+import type { OwnerRegistrationResponse, OwnerSubmissionResponse } from '../types/responses';
+
+export const ownerApi = {
+  getOwnerRegistrations: (status?: string) =>
+    axiosClient.get<never, OwnerRegistrationResponse[]>('/api/v1/admin/owner-registrations', { params: { status } }),
+  approveOwner: (id: string, payload: ApproveRequest) =>
+    axiosClient.put(`/api/v1/admin/owner-registrations/${id}/approve`, payload),
+  rejectOwner: (id: string, payload: RejectRequest) =>
+    axiosClient.put(`/api/v1/admin/owner-registrations/${id}/reject`, payload),
+  getSubmissions: (status?: string) =>
+    axiosClient.get<never, OwnerSubmissionResponse[]>('/api/v1/admin/submissions', { params: { status } }),
+  approveSubmission: (id: string, payload: ApproveRequest) =>
+    axiosClient.put(`/api/v1/admin/submissions/${id}/approve`, payload),
+  rejectSubmission: (id: string, payload: RejectRequest) =>
+    axiosClient.put(`/api/v1/admin/submissions/${id}/reject`, payload),
+};

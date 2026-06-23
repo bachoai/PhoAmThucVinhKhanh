@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Quan4CulinaryTourism.Mobile.Components.AudioPlayerView"
+             x:Name="Self">
+    <Border StrokeShape="RoundRectangle 20">
+        <VerticalStackLayout Spacing="12">
+            <Label Text="Audio trải nghiệm"
+                   Style="{StaticResource SectionTitleLabel}" />
+            <Label Text="{Binding Source={x:Reference Self}, Path=State}"
+                   TextColor="{StaticResource Primary}" />
+            <Label Text="{Binding Source={x:Reference Self}, Path=Message}" />
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Play" Command="{Binding Source={x:Reference Self}, Path=PlayCommand}" />
+                <Button Text="Pause" Command="{Binding Source={x:Reference Self}, Path=PauseCommand}" />
+                <Button Text="Stop" Command="{Binding Source={x:Reference Self}, Path=StopCommand}" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </Border>
+</ContentView>

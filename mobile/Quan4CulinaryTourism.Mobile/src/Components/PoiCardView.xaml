@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Quan4CulinaryTourism.Mobile.Components.PoiCardView"
+             x:Name="Self">
+    <Border StrokeShape="RoundRectangle 24"
+            Padding="0">
+        <Grid RowDefinitions="160,Auto" BindingContext="{Binding Source={x:Reference Self}, Path=Poi}">
+            <Image Grid.Row="0"
+                   Aspect="AspectFill"
+                   Source="{Binding ThumbnailUrl}" />
+            <VerticalStackLayout Grid.Row="1" Padding="16" Spacing="8">
+                <Label Text="{Binding Name}" Style="{StaticResource SectionTitleLabel}" />
+                <Label Text="{Binding DisplayAddress}" LineBreakMode="TailTruncation" />
+                <HorizontalStackLayout Spacing="12">
+                    <Border Style="{StaticResource ChipBorderStyle}" BackgroundColor="{StaticResource SecondarySoft}">
+                        <Label Text="{Binding CategoryName}" Style="{StaticResource ChipLabel}" />
+                    </Border>
+                    <Border Style="{StaticResource ChipBorderStyle}">
+                        <Label Text="{Binding PriceRange}" Style="{StaticResource ChipLabel}" />
+                    </Border>
+                    <Border Style="{StaticResource ChipBorderStyle}" BackgroundColor="{StaticResource WarningSoft}">
+                        <Label Text="{Binding RatingText}" Style="{StaticResource ChipLabel}" />
+                    </Border>
+                </HorizontalStackLayout>
+                <Label Text="Có audio thuyết minh"
+                       FontSize="12"
+                       TextColor="{StaticResource Secondary}"
+                       IsVisible="{Binding HasAudio}" />
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+</ContentView>

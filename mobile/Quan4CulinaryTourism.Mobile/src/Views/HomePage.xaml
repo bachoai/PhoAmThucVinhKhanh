@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:components="clr-namespace:Quan4CulinaryTourism.Mobile.Components"
+             x:Class="Quan4CulinaryTourism.Mobile.Views.HomePage">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16" Spacing="18">
+            <Border Padding="0">
+                <Grid Padding="22">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#FF6B35" Offset="0.0" />
+                            <GradientStop Color="#2EC4B6" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Xin chào du khách"
+                               Style="{StaticResource HeroTitleLabel}" />
+                        <Label Text="{Binding HeroSubtitle}" TextColor="White" />
+                        <HorizontalStackLayout Spacing="12">
+                            <Button Text="Khám phá POI"
+                                    Command="{Binding OpenPoiListCommand}"
+                                    BackgroundColor="White"
+                                    TextColor="{StaticResource Primary}" />
+                            <Button Text="QR demo"
+                                    Command="{Binding OpenQrDemoCommand}"
+                                    BackgroundColor="#0F172A" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <Label Text="{Binding WelcomeMessage}"
+                   TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
+
+            <SearchBar Text="{Binding SearchKeyword}"
+                       Placeholder="Tìm món ngon, quán ngon..."
+                       SearchCommand="{Binding OpenPoiListCommand}" />
+
+            <components:OfflineBannerView IsOffline="{Binding IsOfflineMode}" />
+
+            <Label Text="Danh mục" Style="{StaticResource SectionTitleLabel}" />
+            <CollectionView ItemsSource="{Binding Categories}" ItemsLayout="HorizontalList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <components:CategoryChipView Text="{Binding Name}" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <HorizontalStackLayout Spacing="12">
+                <Button Text="Tìm quán gần tôi" Command="{Binding OpenNearbyCommand}" />
+                <Button Text="Mở bản đồ" Command="{Binding OpenMapCommand}" BackgroundColor="{StaticResource Secondary}" />
+            </HorizontalStackLayout>
+
+            <Label Text="Địa điểm nổi bật" Style="{StaticResource SectionTitleLabel}" />
+            <CollectionView ItemsSource="{Binding FeaturedPois}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="0,0,0,12">
+                            <components:PoiCardView Poi="{Binding .}">
+                                <components:PoiCardView.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDetailCommand}"
+                                                          CommandParameter="{Binding Id}" />
+                                </components:PoiCardView.GestureRecognizers>
+                            </components:PoiCardView>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label Text="Gần bạn" Style="{StaticResource SectionTitleLabel}" />
+            <CollectionView ItemsSource="{Binding NearbyPois}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <components:PoiCardView Poi="{Binding .}">
+                            <components:PoiCardView.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDetailCommand}"
+                                                      CommandParameter="{Binding Id}" />
+                            </components:PoiCardView.GestureRecognizers>
+                        </components:PoiCardView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

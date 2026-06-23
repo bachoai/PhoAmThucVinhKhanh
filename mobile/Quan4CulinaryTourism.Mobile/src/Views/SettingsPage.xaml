@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Quan4CulinaryTourism.Mobile.Views.SettingsPage">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16" Spacing="16">
+            <Border>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Ngôn ngữ nội dung" Style="{StaticResource SectionTitleLabel}" />
+                    <Picker ItemsSource="{Binding Languages}"
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedItem="{Binding SelectedLanguageOption}" />
+                    <Button Text="Cập nhật ngôn ngữ" Command="{Binding ChangeLanguageCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Theme" Style="{StaticResource SectionTitleLabel}" />
+                    <Picker ItemsSource="{Binding Themes}"
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedItem="{Binding SelectedThemeOption}" />
+                    <Button Text="Áp dụng theme" Command="{Binding ChangeThemeCommand}" BackgroundColor="{StaticResource Secondary}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Backend base URL" Style="{StaticResource SectionTitleLabel}" />
+                    <Picker ItemsSource="{Binding ApiEndpoints}"
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedItem="{Binding SelectedEndpointOption}" />
+                    <Button Text="Dùng preset" Command="{Binding ApplyEndpointPresetCommand}" BackgroundColor="{StaticResource Secondary}" />
+                    <Entry Text="{Binding ApiBaseUrl}" Placeholder="http://192.168.1.50:5163" />
+                    <Button Text="Lưu backend URL" Command="{Binding SaveApiBaseUrlCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Auto Narration" Style="{StaticResource SectionTitleLabel}" />
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="Bật tự động phát/gợi ý audio khi vào geofence" VerticalOptions="Center" />
+                        <Switch IsToggled="{Binding AutoNarrationEnabled}" />
+                    </HorizontalStackLayout>
+                    <Picker ItemsSource="{Binding NarrationRadiusOptions}"
+                            SelectedItem="{Binding SelectedNarrationRadius}"
+                            Title="Bán kính mặc định" />
+                    <Button Text="Lưu Auto Narration" Command="{Binding SaveNarrationSettingsCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Backend status" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="{Binding BackendStatus}" />
+                    <Label Text="App version" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="{Binding AppVersion}" />
+                    <Button Text="Xóa cache offline" Command="{Binding ClearCacheCommand}" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
