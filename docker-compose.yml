@@ -1,0 +1,20 @@
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    ports: ["27017:27017"]
+    volumes: [mongo-data:/data/db]
+  api:
+    build: ./backend/Quan4CulinaryTourism.Api
+    depends_on: [mongo]
+    ports: ["5163:8080"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      MongoDbSettings__ConnectionString: mongodb://mongo:27017
+      JwtSettings__SecretKey: ${JWT_SECRET:?Set JWT_SECRET in your environment}
+      DefaultAdmin__Email: ${DEFAULT_ADMIN_EMAIL:-admin@example.com}
+      DefaultAdmin__Password: ${DEFAULT_ADMIN_PASSWORD:?Set DEFAULT_ADMIN_PASSWORD in your environment}
+      Cors__AllowedOrigins__0: ${ADMIN_ORIGIN:-http://localhost:5173}
+      Cors__AllowedOrigins__1: ${PUBLIC_ORIGIN:-http://localhost:5174}
+volumes:
+  mongo-data:

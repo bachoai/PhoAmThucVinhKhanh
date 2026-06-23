@@ -15,6 +15,10 @@ builder.Services.Configure<DefaultAdminSettings>(builder.Configuration.GetSectio
 builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection("Cors"));
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>() ?? new JwtSettings();
+if (!builder.Environment.IsDevelopment() && jwtSettings.SecretKey.StartsWith("__SET_", StringComparison.Ordinal))
+{
+    throw new InvalidOperationException("JwtSettings:SecretKey must be configured outside source control.");
+}
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -84,8 +88,11 @@ builder.Services.AddScoped<HealthService>();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseStaticFiles();
 app.UseCors("DefaultCors");

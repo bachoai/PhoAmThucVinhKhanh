@@ -35,3 +35,10 @@ pnpm-debug.log*
 # Test/coverage artifacts
 **/coverage/
 **/TestResults/
+
+# MAUI / Android signing and generated IDE run settings
+**/*.keystore
+**/*.jks
+**/*.pfx
+**/*.snk
+.run/

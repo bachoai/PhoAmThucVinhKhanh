@@ -1,0 +1,1 @@
+import { getData } from './axiosClient'; import type { PoiAudio } from '../types/responses'; export const audioApi = { byPoi: (id: string, lang: string) => getData<PoiAudio | null>(`/api/v1/poi/${id}/audio`, { lang }) }

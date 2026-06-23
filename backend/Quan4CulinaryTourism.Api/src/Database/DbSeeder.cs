@@ -23,6 +23,7 @@ public class DbSeeder
         await SeedRolesAsync(cancellationToken);
         await SeedAdminAsync(cancellationToken);
         await SeedCategoriesAsync(cancellationToken);
+        await SeedPoisAsync(cancellationToken);
         await SeedMapPackAsync(cancellationToken);
     }
 
@@ -47,6 +48,11 @@ public class DbSeeder
 
     private async Task SeedAdminAsync(CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(_defaultAdmin.Password))
+        {
+            return;
+        }
+
         var existing = await _context.Users.Find(x => x.Email == _defaultAdmin.Email).FirstOrDefaultAsync(cancellationToken);
         if (existing is not null)
         {
@@ -109,4 +115,54 @@ public class DbSeeder
             PublishedAt = DateTime.UtcNow
         }, cancellationToken: cancellationToken);
     }
+
+    private async Task SeedPoisAsync(CancellationToken cancellationToken)
+    {
+        if (await _context.Pois.Find(FilterDefinition<Poi>.Empty).AnyAsync(cancellationToken))
+        {
+            return;
+        }
+
+        var categories = await _context.Categories.Find(FilterDefinition<Category>.Empty).ToListAsync(cancellationToken);
+        var byCode = categories.ToDictionary(x => x.Code, x => x.Id);
+        string CategoryId(string code) => byCode.TryGetValue(code, out var id) ? id : string.Empty;
+
+        var hours = new List<OpeningHour>
+        {
+            new() { DayOfWeek = "Thứ Hai - Chủ Nhật", OpenTime = "10:00", CloseTime = "22:30" }
+        };
+
+        var pois = new[]
+        {
+            CreateDemoPoi("Ốc Oanh", "Quán ốc bình dân nổi tiếng với nhiều món xào bơ, rang muối và sốt me.", CategoryId("seafood"), "534 Vĩnh Khánh", 10.7592, 106.7045, "$$", 4.6, 1240, 10, "https://images.unsplash.com/photo-1559737558-2f5a35f4523b?auto=format&fit=crop&w=1200&q=85", ["hải sản", "vĩnh khánh", "buổi tối"], hours),
+            CreateDemoPoi("Bánh mì chảo Cô 3 Hậu", "Bánh mì chảo nóng hổi, phù hợp cho bữa sáng và bữa trưa nhanh.", CategoryId("street_food"), "36 Nguyễn Hữu Hào", 10.7580, 106.7018, "$", 4.4, 630, 8, "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1200&q=85", ["bánh mì", "bữa sáng", "địa phương"], hours),
+            CreateDemoPoi("Cơm tấm Cây Điệp", "Cơm tấm sườn nướng thơm, phục vụ nhanh trong không khí Quận 4 thân thuộc.", CategoryId("rice"), "140/1 Đoàn Văn Bơ", 10.7548, 106.7049, "$", 4.5, 890, 9, "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1200&q=85", ["cơm tấm", "sườn nướng", "trưa"], hours),
+            CreateDemoPoi("Súp cua Cô Bông", "Súp cua nóng với thịt cua, trứng cút và nấm, món ăn vặt quen thuộc.", CategoryId("street_food"), "22 Đoàn Văn Bơ", 10.7566, 106.7032, "$", 4.3, 410, 7, "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85", ["súp cua", "ăn vặt", "chiều tối"], hours),
+            CreateDemoPoi("Cà phê bờ kênh Khánh Hội", "Không gian cà phê thoáng bên bờ kênh, thích hợp nghỉ chân sau hành trình khám phá.", CategoryId("coffee"), "Bến Vân Đồn", 10.7610, 106.7068, "$$", 4.2, 245, 5, "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=85", ["cà phê", "view kênh", "thư giãn"], hours)
+        };
+
+        await _context.Pois.InsertManyAsync(pois, cancellationToken: cancellationToken);
+    }
+
+    private static Poi CreateDemoPoi(string name, string description, string categoryId, string address, double latitude, double longitude,
+        string priceRange, double rating, int reviewCount, int priority, string imageUrl, List<string> tags, List<OpeningHour> hours) => new()
+    {
+        Name = name,
+        Description = description,
+        CategoryId = categoryId,
+        Address = address,
+        Ward = "Phường 13",
+        District = "Quận 4",
+        City = "TP. Hồ Chí Minh",
+        Location = GeoLocationFactory.Create(longitude, latitude),
+        PriceRange = priceRange,
+        Rating = rating,
+        ReviewCount = reviewCount,
+        Priority = priority,
+        Images = [new PoiImage { Url = imageUrl, IsThumbnail = true }],
+        OpeningHours = hours,
+        ContactInfo = new ContactInfo { Phone = "028 3826 0000" },
+        Tags = tags,
+        IsActive = true
+    };
 }

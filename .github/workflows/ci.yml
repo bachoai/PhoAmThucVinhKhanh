@@ -1,0 +1,20 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: 10.0.x }
+      - run: dotnet build backend/Quan4CulinaryTourism.Api/Quan4CulinaryTourism.Api.csproj --configuration Release
+  web:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { directory: [website-admin, website-user] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm, cache-dependency-path: '${{ matrix.directory }}/package-lock.json' }
+      - run: npm ci && npm run build
+        working-directory: ${{ matrix.directory }}
