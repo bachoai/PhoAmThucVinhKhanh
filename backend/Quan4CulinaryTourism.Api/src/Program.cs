@@ -17,6 +17,7 @@ builder.Services.Configure<UploadSettings>(builder.Configuration.GetSection(name
 builder.Services.Configure<DefaultAdminSettings>(builder.Configuration.GetSection("DefaultAdmin"));
 builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection("Cors"));
 builder.Services.Configure<TextToSpeechSettings>(builder.Configuration.GetSection(nameof(TextToSpeechSettings)));
+builder.Services.Configure<PublicSiteSettings>(builder.Configuration.GetSection(nameof(PublicSiteSettings)));
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>() ?? new JwtSettings();
 if (!builder.Environment.IsDevelopment() && jwtSettings.SecretKey.StartsWith("__SET_", StringComparison.Ordinal))

@@ -42,3 +42,8 @@ public class TextToSpeechSettings
     public string Rate { get; set; } = "+0%";
     public int TimeoutSeconds { get; set; } = 90;
 }
+
+public class PublicSiteSettings
+{
+    public string BaseUrl { get; set; } = "http://localhost:5173";
+}

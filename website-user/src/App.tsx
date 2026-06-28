@@ -870,6 +870,7 @@ function TourCard({
 function QrPage() {
   const { lang } = useAppStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [code, setCode] = useState('');
   const [statusText, setStatusText] = useState('Dang khoi dong camera QR...');
   const [lastResolved, setLastResolved] = useState<QrActivationResponse | null>(null);
@@ -880,6 +881,7 @@ function QrPage() {
     clear: () => void;
   } | null>(null);
   const resolveRef = useRef<(value: string) => Promise<void>>(async () => undefined);
+  const codeFromQuery = searchParams.get('code')?.trim() ?? '';
 
   const resolveValue = async (rawValue: string) => {
     const value = rawValue.trim();
@@ -891,16 +893,38 @@ function QrPage() {
     setErrorText('');
 
     try {
-      if (value.startsWith('quan4tourism://poi/')) {
-        const poiId = value.slice('quan4tourism://poi/'.length);
+      const qrCodeFromUrl = (() => {
+        try {
+          const url = new URL(value);
+          if (!/^https?:$/i.test(url.protocol)) {
+            return null;
+          }
+
+          if (/\/qr\/?$/i.test(url.pathname)) {
+            return url.searchParams.get('code');
+          }
+
+          return null;
+        } catch {
+          return null;
+        }
+      })();
+
+      const poiIdFromCustomScheme = value.startsWith('quan4tourism://poi/')
+        ? value.slice('quan4tourism://poi/'.length)
+        : null;
+
+      if (poiIdFromCustomScheme) {
+        const poiId = poiIdFromCustomScheme;
         await track('qr_scanned', lang, poiId, { fallback: 'poi_id' });
         navigate(`/poi/${poiId}?autoplay=prefer_audio&source=qr`);
         return;
       }
 
-      const normalizedCode = value.startsWith('quan4tourism://qr/')
-        ? value.slice('quan4tourism://qr/'.length)
-        : value;
+      const normalizedCode = qrCodeFromUrl
+        ?? (value.startsWith('quan4tourism://qr/')
+          ? value.slice('quan4tourism://qr/'.length)
+          : value);
 
       if (/^[a-f0-9]{24}$/i.test(normalizedCode)) {
         await track('qr_scanned', lang, normalizedCode, { fallback: 'poi_id' });
@@ -926,6 +950,16 @@ function QrPage() {
   };
 
   resolveRef.current = resolveValue;
+
+  useEffect(() => {
+    if (!codeFromQuery) {
+      return;
+    }
+
+    setCode(codeFromQuery);
+    setStatusText('Dang mo noi dung tu lien ket QR...');
+    void resolveValue(codeFromQuery);
+  }, [codeFromQuery]);
 
   useEffect(() => {
     let disposed = false;
@@ -1001,7 +1035,7 @@ function QrPage() {
         <div className="rounded-[2rem] bg-white p-6 shadow-soft dark:bg-slate-900">
           <h2 className="text-xl font-bold">Nhap ma thu cong</h2>
           <p className="mt-2 text-sm text-slate-500">
-            Ho tro `KHANHHOI-01`, `quan4tourism://qr/...`, `quan4tourism://poi/...` hoac Mongo POI id 24 ky tu.
+            Ho tro `KHANHHOI-01`, `https://.../qr?code=...`, `quan4tourism://qr/...`, `quan4tourism://poi/...` hoac Mongo POI id 24 ky tu.
           </p>
 
           <form

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Quan4CulinaryTourism.Api.Common;
 using Quan4CulinaryTourism.Api.DTOs;
+using Quan4CulinaryTourism.Api.Database;
 using Quan4CulinaryTourism.Api.Models;
 using Quan4CulinaryTourism.Api.Repositories;
 
@@ -10,11 +12,16 @@ public class QrActivationService
 {
     private readonly QrActivationRepository _qrActivationRepository;
     private readonly PoiRepository _poiRepository;
+    private readonly PublicSiteSettings _publicSiteSettings;
 
-    public QrActivationService(QrActivationRepository qrActivationRepository, PoiRepository poiRepository)
+    public QrActivationService(
+        QrActivationRepository qrActivationRepository,
+        PoiRepository poiRepository,
+        IOptions<PublicSiteSettings> publicSiteSettings)
     {
         _qrActivationRepository = qrActivationRepository;
         _poiRepository = poiRepository;
+        _publicSiteSettings = publicSiteSettings.Value;
     }
 
     public async Task<List<QrActivationResponse>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -109,17 +116,20 @@ public class QrActivationService
         var poiLookup = (await _poiRepository.GetManyByIdsAsync(entities.Select(x => x.PoiId), cancellationToken))
             .ToDictionary(x => x.Id, x => x, StringComparer.Ordinal);
 
-        return entities.Select(entity => Map(entity, poiLookup)).ToList();
+        return entities.Select(entity => Map(entity, poiLookup, _publicSiteSettings)).ToList();
     }
 
     private async Task<QrActivationResponse> MapAsync(QrActivation entity, CancellationToken cancellationToken)
     {
         var poi = await _poiRepository.GetByIdAsync(entity.PoiId, cancellationToken)
             ?? throw new ApiException("POI gan voi ma QR khong con ton tai.", StatusCodes.Status404NotFound);
-        return Map(entity, new Dictionary<string, Poi>(StringComparer.Ordinal) { [poi.Id] = poi });
+        return Map(entity, new Dictionary<string, Poi>(StringComparer.Ordinal) { [poi.Id] = poi }, _publicSiteSettings);
     }
 
-    private static QrActivationResponse Map(QrActivation entity, IReadOnlyDictionary<string, Poi> poiLookup)
+    private static QrActivationResponse Map(
+        QrActivation entity,
+        IReadOnlyDictionary<string, Poi> poiLookup,
+        PublicSiteSettings publicSiteSettings)
     {
         poiLookup.TryGetValue(entity.PoiId, out var poi);
 
@@ -137,10 +147,19 @@ public class QrActivationService
             SortOrder = entity.SortOrder,
             Description = entity.Description,
             ScanMode = entity.ScanMode,
-            DeepLink = $"quan4tourism://qr/{entity.Code}",
+            DeepLink = BuildDeepLink(entity.Code, publicSiteSettings),
             IsActive = entity.IsActive,
             UpdatedAt = entity.UpdatedAt
         };
+    }
+
+    private static string BuildDeepLink(string code, PublicSiteSettings settings)
+    {
+        var baseUrl = string.IsNullOrWhiteSpace(settings.BaseUrl)
+            ? "http://localhost:5173"
+            : settings.BaseUrl.Trim();
+
+        return $"{baseUrl.TrimEnd('/')}/qr?code={Uri.EscapeDataString(code)}";
     }
 
     private static string NormalizeCode(string rawCode)
