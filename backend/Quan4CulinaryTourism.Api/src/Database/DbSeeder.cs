@@ -291,46 +291,17 @@ public class DbSeeder
             .ThenBy(x => x.Name)
             .Limit(20)
             .ToListAsync(cancellationToken);
-
-        var existingKeys = await _context.PoiAudios.Find(FilterDefinition<PoiAudio>.Empty)
-            .Project(x => x.PoiId + ":" + x.Lang)
-            .ToListAsync(cancellationToken);
-
-        var audios = new List<PoiAudio>();
-        foreach (var (poi, index) in pois.Select((poi, index) => (poi, index)))
-        {
-            var key = poi.Id + ":vi";
-            if (existingKeys.Contains(key, StringComparer.Ordinal))
-            {
-                continue;
-            }
-
-            audios.Add(new PoiAudio
-            {
-                PoiId = poi.Id,
-                Lang = "vi",
-                AudioUrl = SampleAudioUrls[index % SampleAudioUrls.Length],
-                VoiceName = "vi-VN-HoaiMyNeural",
-                SourceType = "uploaded",
-                Status = SharedConstants.AudioDone,
-                DurationSeconds = 36 + (index % 8) * 6,
-                FileSizeBytes = 180_000 + index * 7_500,
-                CreatedAt = DateTime.UtcNow.AddDays(-(index + 1)),
-                UpdatedAt = DateTime.UtcNow.AddHours(-index)
-            });
-        }
-
-        if (audios.Count > 0)
-        {
-            await _context.PoiAudios.InsertManyAsync(audios, cancellationToken: cancellationToken);
-        }
-
         if (pois.Count > 0)
         {
             var poiIds = pois.Select(static poi => poi.Id).ToList();
+            await _context.PoiAudios.DeleteManyAsync(
+                x => poiIds.Contains(x.PoiId)
+                     && x.Lang == "vi"
+                     && x.AudioUrl.Contains("samplelib.com/lib/preview/mp3"),
+                cancellationToken);
             await _context.Pois.UpdateManyAsync(
                 x => poiIds.Contains(x.Id),
-                Builders<Poi>.Update.Set(x => x.AudioStatus, SharedConstants.AudioDone),
+                Builders<Poi>.Update.Set(x => x.AudioStatus, SharedConstants.AudioPending),
                 cancellationToken: cancellationToken);
         }
     }

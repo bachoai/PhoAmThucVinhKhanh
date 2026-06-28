@@ -18,6 +18,7 @@ docker compose up mongo -d
 ```powershell
 cd backend\Quan4CulinaryTourism.Api
 dotnet restore
+python -m pip install -r tools\requirements-tts.txt
 dotnet run
 ```
 
@@ -53,8 +54,25 @@ Section quan trọng:
 - `MongoDbSettings`
 - `JwtSettings`
 - `UploadSettings`
+- `TextToSpeechSettings`
 - `DefaultAdmin`
 - `Cors.AllowedOrigins`
+
+## Audio tiếng Việt từ Python
+
+Backend có script Python `tools/tts_generate.py` dùng `gTTS` để tạo MP3 tiếng Việt từ `ttsScript` hoặc `description` của POI.
+
+Luồng hiện tại:
+
+- FE gọi `GET /api/v1/poi/{id}/audio?lang=vi`
+- nếu Mongo chưa có `PoiAudio` tiếng Việt, backend sẽ tự sinh file MP3 vào `wwwroot/uploads/audio`
+- file tạo xong sẽ được lưu lại trong `poi_audios` để lần sau phát trực tiếp
+
+Thiết lập chính:
+
+- `TextToSpeechSettings:Enabled`
+- `TextToSpeechSettings:PythonCommand`
+- `TextToSpeechSettings:DefaultVoice`
 
 ## API chính
 

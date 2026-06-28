@@ -31,6 +31,7 @@ pnpm-debug.log*
 # .NET / MAUI
 **/bin/
 **/obj/
+backend/Quan4CulinaryTourism.Api/wwwroot/uploads/
 
 # Test/coverage artifacts
 **/coverage/

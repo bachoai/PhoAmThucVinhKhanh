@@ -15,6 +15,7 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(nameof(
 builder.Services.Configure<UploadSettings>(builder.Configuration.GetSection(nameof(UploadSettings)));
 builder.Services.Configure<DefaultAdminSettings>(builder.Configuration.GetSection("DefaultAdmin"));
 builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection("Cors"));
+builder.Services.Configure<TextToSpeechSettings>(builder.Configuration.GetSection(nameof(TextToSpeechSettings)));
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>() ?? new JwtSettings();
 if (!builder.Environment.IsDevelopment() && jwtSettings.SecretKey.StartsWith("__SET_", StringComparison.Ordinal))
@@ -119,6 +120,7 @@ builder.Services.AddScoped<PoiService>();
 builder.Services.AddScoped<OwnerService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<AudioService>();
+builder.Services.AddScoped<PythonTextToSpeechService>();
 builder.Services.AddScoped<LocalizationService>();
 builder.Services.AddScoped<MediaService>();
 builder.Services.AddScoped<AnalyticsService>();

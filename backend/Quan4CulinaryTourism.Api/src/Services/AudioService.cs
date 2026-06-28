@@ -12,12 +12,21 @@ public class AudioService
     private readonly PoiRepository _poiRepository;
     private readonly PoiAudioRepository _poiAudioRepository;
     private readonly FileUploadHelper _fileUploadHelper;
+    private readonly PythonTextToSpeechService _pythonTextToSpeechService;
+    private readonly ILogger<AudioService> _logger;
 
-    public AudioService(PoiRepository poiRepository, PoiAudioRepository poiAudioRepository, FileUploadHelper fileUploadHelper)
+    public AudioService(
+        PoiRepository poiRepository,
+        PoiAudioRepository poiAudioRepository,
+        FileUploadHelper fileUploadHelper,
+        PythonTextToSpeechService pythonTextToSpeechService,
+        ILogger<AudioService> logger)
     {
         _poiRepository = poiRepository;
         _poiAudioRepository = poiAudioRepository;
         _fileUploadHelper = fileUploadHelper;
+        _pythonTextToSpeechService = pythonTextToSpeechService;
+        _logger = logger;
     }
 
     public Task<List<AudioLanguageResponse>> GetLanguagesAsync(CancellationToken cancellationToken = default)
@@ -28,10 +37,20 @@ public class AudioService
 
     public async Task<PoiAudioResponse?> GetPoiAudioAsync(string poiId, string? lang, CancellationToken cancellationToken = default)
     {
+        var normalizedLang = string.IsNullOrWhiteSpace(lang) ? "vi" : lang.Trim().ToLowerInvariant();
         PoiAudio? audio = null;
-        if (!string.IsNullOrWhiteSpace(lang))
+        if (!string.IsNullOrWhiteSpace(normalizedLang))
         {
-            audio = await _poiAudioRepository.GetByPoiAndLangAsync(poiId, lang, cancellationToken);
+            audio = await _poiAudioRepository.GetByPoiAndLangAsync(poiId, normalizedLang, cancellationToken);
+        }
+
+        if (audio is null && normalizedLang == "vi")
+        {
+            var generated = await GenerateNarrationAudioAsync(poiId, normalizedLang, cancellationToken);
+            if (generated is not null)
+            {
+                return generated;
+            }
         }
 
         audio ??= (await _poiAudioRepository.GetByPoiIdAsync(poiId, cancellationToken)).FirstOrDefault();
@@ -112,4 +131,49 @@ public class AudioService
         DurationSeconds = audio.DurationSeconds,
         FileSizeBytes = audio.FileSizeBytes
     };
+
+    private async Task<PoiAudioResponse?> GenerateNarrationAudioAsync(string poiId, string lang, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var poi = await _poiRepository.GetByIdAsync(poiId, cancellationToken);
+            if (poi is null)
+            {
+                return null;
+            }
+
+            var narrationText = string.IsNullOrWhiteSpace(poi.TtsScript) ? poi.Description : poi.TtsScript;
+            if (string.IsNullOrWhiteSpace(narrationText))
+            {
+                return null;
+            }
+
+            var generated = await _pythonTextToSpeechService.GenerateVietnameseAudioAsync(narrationText, cancellationToken);
+            if (generated is null)
+            {
+                return null;
+            }
+
+            var audio = new PoiAudio
+            {
+                PoiId = poi.Id,
+                Lang = lang,
+                AudioUrl = generated.PublicUrl,
+                VoiceName = generated.VoiceName,
+                SourceType = "python_tts",
+                Status = SharedConstants.AudioDone,
+                FileSizeBytes = generated.FileSizeBytes
+            };
+
+            await _poiAudioRepository.UpsertAsync(audio, cancellationToken);
+            poi.AudioStatus = SharedConstants.AudioDone;
+            await _poiRepository.UpdateAsync(poi, cancellationToken);
+            return ToResponse(audio);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Unable to auto-generate narration audio for POI {PoiId}", poiId);
+            return null;
+        }
+    }
 }

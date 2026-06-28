@@ -32,3 +32,13 @@ public class CorsSettings
 {
     public List<string> AllowedOrigins { get; set; } = [];
 }
+
+public class TextToSpeechSettings
+{
+    public bool Enabled { get; set; } = true;
+    public string PythonCommand { get; set; } = "python";
+    public string ScriptPath { get; set; } = "tools/tts_generate.py";
+    public string DefaultVoice { get; set; } = "vi";
+    public string Rate { get; set; } = "+0%";
+    public int TimeoutSeconds { get; set; } = 90;
+}

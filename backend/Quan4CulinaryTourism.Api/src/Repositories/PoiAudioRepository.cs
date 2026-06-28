@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Quan4CulinaryTourism.Api.Database;
 using Quan4CulinaryTourism.Api.Models;
@@ -17,6 +18,20 @@ public class PoiAudioRepository
 
     public async Task UpsertAsync(PoiAudio audio, CancellationToken cancellationToken = default)
     {
+        var existing = await GetByPoiAndLangAsync(audio.PoiId, audio.Lang, cancellationToken);
+        if (existing is not null)
+        {
+            audio.Id = existing.Id;
+            if (audio.CreatedAt == default)
+            {
+                audio.CreatedAt = existing.CreatedAt;
+            }
+        }
+        else if (string.IsNullOrWhiteSpace(audio.Id))
+        {
+            audio.Id = ObjectId.GenerateNewId().ToString();
+        }
+
         audio.UpdatedAt = DateTime.UtcNow;
         await _context.PoiAudios.ReplaceOneAsync(
             x => x.PoiId == audio.PoiId && x.Lang == audio.Lang,

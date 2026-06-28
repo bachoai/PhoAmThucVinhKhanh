@@ -37,6 +37,7 @@ import { ownerApi } from './api/ownerApi';
 import { poiApi } from './api/poiApi';
 import { qrApi } from './api/qrApi';
 import { tourApi } from './api/tourApi';
+import { audioApi } from './api/audioApi';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { PoiCard } from './components/common/PoiCard';
 import { AudioPlayer } from './components/common/AudioPlayer';
@@ -467,6 +468,11 @@ function Detail() {
     queryFn: () => poiApi.detail(id, narrationLang),
     enabled: Boolean(id) && lang !== narrationLang,
   });
+  const audioQuery = useQuery({
+    queryKey: ['audio', id, narrationLang],
+    queryFn: () => audioApi.byPoi(id, narrationLang),
+    enabled: Boolean(id),
+  });
 
   useEffect(() => {
     if (id) {
@@ -535,15 +541,18 @@ function Detail() {
 
           <div className="mt-6">
             <AudioPlayer
+              audioUrl={audioQuery.data?.audioUrl}
               text={narrationText}
               lang={narrationLang}
               autoplay={Boolean(autoplay)}
-              onPlay={() =>
+              loading={audioQuery.isLoading}
+              errorText={audioQuery.isError ? 'Khong tai duoc audio thuyet minh tu backend.' : undefined}
+              onPlay={(mode) =>
                 track(
-                  'tts_played',
+                  mode === 'audio' ? 'audio_played' : 'tts_played',
                   narrationLang,
                   poi.id,
-                  autoplay ? { autoplay, mode: 'tts' } : { mode: 'tts' },
+                  autoplay ? { autoplay, mode } : { mode },
                 )
               }
             />

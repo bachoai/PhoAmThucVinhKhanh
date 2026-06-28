@@ -31,17 +31,25 @@ public class FileUploadHelper
         return $"{Guid.NewGuid():N}{extension}".ToLowerInvariant();
     }
 
-    public async Task<string> SaveFileAsync(IFormFile file, string subFolder, CancellationToken cancellationToken = default)
+    public (string FullPath, string PublicUrl) CreateManagedFilePath(string subFolder, string extension)
     {
-        var safeFileName = GenerateSafeFileName(file.FileName);
+        var normalizedExtension = extension.StartsWith('.') ? extension : $".{extension}";
+        var safeFileName = $"{Guid.NewGuid():N}{normalizedExtension}".ToLowerInvariant();
         var rootPath = Path.Combine(_environment.ContentRootPath, _settings.UploadPath, subFolder);
         Directory.CreateDirectory(rootPath);
         var fullPath = Path.Combine(rootPath, safeFileName);
+        return (fullPath, $"/uploads/{subFolder}/{safeFileName}");
+    }
+
+    public async Task<string> SaveFileAsync(IFormFile file, string subFolder, CancellationToken cancellationToken = default)
+    {
+        var extension = Path.GetExtension(file.FileName);
+        var (fullPath, publicUrl) = CreateManagedFilePath(subFolder, extension);
 
         await using var stream = new FileStream(fullPath, FileMode.Create);
         await file.CopyToAsync(stream, cancellationToken);
 
-        return $"/uploads/{subFolder}/{safeFileName}";
+        return publicUrl;
     }
 
     private static void Validate(IFormFile file, IReadOnlyCollection<string> allowedExtensions, IReadOnlyCollection<string> allowedMimeTypes, int maxSizeMb)
