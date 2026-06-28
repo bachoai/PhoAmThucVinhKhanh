@@ -25,7 +25,7 @@ public class PoiService
 
     public async Task<List<PoiResponse>> LoadAllAsync(PoiSearchRequest request, CancellationToken cancellationToken = default)
     {
-        var pois = await _poiRepository.SearchAsync(request, true, cancellationToken);
+        var pois = await _poiRepository.GetPublicFilteredAsync(request, cancellationToken);
         return await MapManyAsync(pois, request.Lang, cancellationToken);
     }
 

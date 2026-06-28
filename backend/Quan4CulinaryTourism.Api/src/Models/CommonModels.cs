@@ -82,5 +82,20 @@ public static class SharedConstants
     public static readonly string[] SubmissionTypes = ["create", "update"];
     public static readonly string[] MediaTypes = ["image", "audio", "map"];
     public static readonly string[] StorageProviders = ["local", "minio", "s3"];
-    public static readonly string[] AnalyticsEvents = ["poi_viewed", "audio_played", "search_executed", "nearby_requested", "language_changed"];
+    public static readonly string[] QrScanModes = ["prefer_audio", "audio", "tts"];
+    public static readonly string[] AnalyticsEvents =
+    [
+        "poi_viewed",
+        "audio_played",
+        "tts_played",
+        "search_executed",
+        "nearby_requested",
+        "language_changed",
+        "offline_audio_downloaded",
+        "geofence_triggered",
+        "location_sample",
+        "narration_completed",
+        "narration_interrupted",
+        "narration_stopped"
+    ];
 }

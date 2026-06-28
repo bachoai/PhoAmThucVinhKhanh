@@ -1,18 +1,30 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              x:Class="Quan4CulinaryTourism.Mobile.Views.QrEntryPage">
     <ScrollView>
         <VerticalStackLayout Padding="20,16" Spacing="18">
             <Border>
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Demo QR / Nhập mã POI"
+                    <Label Text="{Binding ScannerStatus}"
+                           TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
+                    <Border StrokeThickness="0"
+                            BackgroundColor="{AppThemeBinding Light=#FFF5ED, Dark=#2C2521}"
+                            IsVisible="{Binding IsScannerEnabled}">
+                        <zxing:CameraBarcodeReaderView x:Name="CameraView"
+                                                       HeightRequest="260"
+                                                       HorizontalOptions="Fill"
+                                                       VerticalOptions="Fill"
+                                                       BarcodesDetected="OnBarcodesDetected" />
+                    </Border>
+                    <Label Text="Quet QR / Nhap ma POI"
                            Style="{StaticResource PageTitleLabel}" />
-                    <Label Text="Nếu chưa thêm scanner thật, dùng màn này để demo flow mở chi tiết từ QR hoặc POI id."
+                    <Label Text="Neu camera chua san sang, ban van co the nhap ma QR, deep link hoac POI id de demo kich hoat noi dung."
                            TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
                     <Entry Text="{Binding PoiCode}"
-                           Placeholder="Ví dụ: 6657f02d9b... hoặc quan4tourism://poi/6657f02d9b..." />
-                    <Button Text="Mở chi tiết POI" Command="{Binding OpenPoiCommand}" />
+                           Placeholder="Vi du: KHANHHOI-01, quan4tourism://qr/KHANHHOI-01 hoac quan4tourism://poi/6657f02d9b..." />
+                    <Button Text="Mo va phat noi dung" Command="{Binding OpenPoiCommand}" />
                     <Label Text="{Binding ErrorMessage}"
                            IsVisible="{Binding HasError}"
                            TextColor="{StaticResource Danger}" />

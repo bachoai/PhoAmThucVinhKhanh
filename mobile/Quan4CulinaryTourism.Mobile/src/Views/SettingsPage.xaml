@@ -6,11 +6,11 @@
         <VerticalStackLayout Padding="20,16" Spacing="16">
             <Border>
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Ngôn ngữ nội dung" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="Ngon ngu noi dung" Style="{StaticResource SectionTitleLabel}" />
                     <Picker ItemsSource="{Binding Languages}"
                             ItemDisplayBinding="{Binding Name}"
                             SelectedItem="{Binding SelectedLanguageOption}" />
-                    <Button Text="Cập nhật ngôn ngữ" Command="{Binding ChangeLanguageCommand}" />
+                    <Button Text="Cap nhat ngon ngu" Command="{Binding ChangeLanguageCommand}" />
                 </VerticalStackLayout>
             </Border>
 
@@ -20,7 +20,7 @@
                     <Picker ItemsSource="{Binding Themes}"
                             ItemDisplayBinding="{Binding Name}"
                             SelectedItem="{Binding SelectedThemeOption}" />
-                    <Button Text="Áp dụng theme" Command="{Binding ChangeThemeCommand}" BackgroundColor="{StaticResource Secondary}" />
+                    <Button Text="Ap dung theme" Command="{Binding ChangeThemeCommand}" BackgroundColor="{StaticResource Secondary}" />
                 </VerticalStackLayout>
             </Border>
 
@@ -30,9 +30,9 @@
                     <Picker ItemsSource="{Binding ApiEndpoints}"
                             ItemDisplayBinding="{Binding Name}"
                             SelectedItem="{Binding SelectedEndpointOption}" />
-                    <Button Text="Dùng preset" Command="{Binding ApplyEndpointPresetCommand}" BackgroundColor="{StaticResource Secondary}" />
+                    <Button Text="Dung preset" Command="{Binding ApplyEndpointPresetCommand}" BackgroundColor="{StaticResource Secondary}" />
                     <Entry Text="{Binding ApiBaseUrl}" Placeholder="http://192.168.1.50:5163" />
-                    <Button Text="Lưu backend URL" Command="{Binding SaveApiBaseUrlCommand}" />
+                    <Button Text="Luu backend URL" Command="{Binding SaveApiBaseUrlCommand}" />
                 </VerticalStackLayout>
             </Border>
 
@@ -40,15 +40,39 @@
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Auto Narration" Style="{StaticResource SectionTitleLabel}" />
                     <HorizontalStackLayout Spacing="12">
-                        <Label Text="Bật tự động phát/gợi ý audio khi vào geofence" VerticalOptions="Center" />
+                        <Label Text="Bat tu dong phat/goi y audio khi vao geofence" VerticalOptions="Center" />
                         <Switch IsToggled="{Binding AutoNarrationEnabled}" />
                     </HorizontalStackLayout>
                     <Picker ItemsSource="{Binding NarrationRadiusOptions}"
                             SelectedItem="{Binding SelectedNarrationRadius}"
-                            Title="Bán kính mặc định" />
-                    <Button Text="Lưu Auto Narration" Command="{Binding SaveNarrationSettingsCommand}" />
+                            Title="Ban kinh mac dinh" />
+                    <Button Text="Luu Auto Narration" Command="{Binding SaveNarrationSettingsCommand}" />
                     <Label Text="Tracking status" Style="{StaticResource SectionTitleLabel}" />
                     <Label Text="{Binding TrackingStatus}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Offline pack" Style="{StaticResource SectionTitleLabel}" />
+                    <Label Text="{Binding OfflinePackStatus}" />
+                    <Label Text="{Binding OfflinePackSummary}" TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="San sang offline" VerticalOptions="Center" />
+                        <Switch IsToggled="{Binding OfflinePackReady}" IsEnabled="False" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="Tai audio offline" VerticalOptions="Center" />
+                        <Switch IsToggled="{Binding DownloadAudioForOffline}" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="Tai map pack neu backend co file" VerticalOptions="Center" />
+                        <Switch IsToggled="{Binding DownloadMapPackForOffline}" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="12">
+                        <Button Text="Chuan bi offline" Command="{Binding PrepareOfflinePackCommand}" />
+                        <Button Text="Refresh offline status" Command="{Binding RefreshOfflineStatusCommand}" BackgroundColor="{StaticResource Secondary}" />
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
 
@@ -58,7 +82,7 @@
                     <Label Text="{Binding BackendStatus}" />
                     <Label Text="App version" Style="{StaticResource SectionTitleLabel}" />
                     <Label Text="{Binding AppVersion}" />
-                    <Button Text="Xóa cache offline" Command="{Binding ClearCacheCommand}" />
+                    <Button Text="Xoa cache offline" Command="{Binding ClearCacheCommand}" />
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>

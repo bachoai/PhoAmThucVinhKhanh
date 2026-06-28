@@ -24,6 +24,7 @@ public class MongoDbContext
         MediaFiles = Database.GetCollection<MediaFile>("media_files");
         MapPacks = Database.GetCollection<MapPack>("map_packs");
         Tours = Database.GetCollection<Tour>("tours");
+        QrActivations = Database.GetCollection<QrActivation>("qr_activations");
     }
 
     public IMongoDatabase Database { get; }
@@ -41,4 +42,5 @@ public class MongoDbContext
     public IMongoCollection<MediaFile> MediaFiles { get; }
     public IMongoCollection<MapPack> MapPacks { get; }
     public IMongoCollection<Tour> Tours { get; }
+    public IMongoCollection<QrActivation> QrActivations { get; }
 }

@@ -98,6 +98,60 @@ public class OfflineDatabaseService
         return row is null ? null : JsonSerializer.Deserialize<PoiAudioResponse>(row.JsonData, JsonOptions);
     }
 
+    public async Task SaveMapPackAsync(MapPackResponse mapPack)
+    {
+        var db = await _dbContext.GetConnectionAsync();
+        await db.InsertOrReplaceAsync(new LocalMapPack
+        {
+            CacheKey = "active",
+            JsonData = JsonSerializer.Serialize(mapPack, JsonOptions)
+        });
+        await TouchAsync("map-pack");
+    }
+
+    public async Task<MapPackResponse?> GetMapPackAsync()
+    {
+        var db = await _dbContext.GetConnectionAsync();
+        var row = await db.FindAsync<LocalMapPack>("active");
+        return row is null ? null : JsonSerializer.Deserialize<MapPackResponse>(row.JsonData, JsonOptions);
+    }
+
+    public async Task<int> GetCategoryCountAsync()
+    {
+        var db = await _dbContext.GetConnectionAsync();
+        return await db.Table<LocalCategory>().CountAsync();
+    }
+
+    public async Task<int> GetPoiCountAsync()
+    {
+        var db = await _dbContext.GetConnectionAsync();
+        return await db.Table<LocalPoi>().CountAsync();
+    }
+
+    public async Task<int> GetPoiDetailCountAsync()
+    {
+        var db = await _dbContext.GetConnectionAsync();
+        return await db.Table<LocalPoiDetail>().CountAsync();
+    }
+
+    public async Task<int> GetOfflineAudioCountAsync()
+    {
+        var db = await _dbContext.GetConnectionAsync();
+        var rows = await db.Table<LocalPoiAudio>().ToListAsync();
+        return rows
+            .Select(static row => JsonSerializer.Deserialize<PoiAudioResponse>(row.JsonData, JsonOptions))
+            .Count(static audio => !string.IsNullOrWhiteSpace(audio?.LocalAudioPath) && File.Exists(audio.LocalAudioPath));
+    }
+
+    public async Task<DateTime?> GetCacheUpdatedAtAsync(string key)
+    {
+        var db = await _dbContext.GetConnectionAsync();
+        var row = await db.FindAsync<LocalCacheMetadata>(key);
+        return row?.UpdatedAtUtc;
+    }
+
+    public Task MarkCacheUpdatedAsync(string key) => TouchAsync(key);
+
     public async Task ClearCacheAsync()
     {
         var db = await _dbContext.GetConnectionAsync();
@@ -105,7 +159,11 @@ public class OfflineDatabaseService
         await db.DeleteAllAsync<LocalPoi>();
         await db.DeleteAllAsync<LocalPoiDetail>();
         await db.DeleteAllAsync<LocalPoiAudio>();
+        await db.DeleteAllAsync<LocalMapPack>();
         await db.DeleteAllAsync<LocalCacheMetadata>();
+
+        DeleteFolderIfExists(Path.Combine(FileSystem.AppDataDirectory, "audio"));
+        DeleteFolderIfExists(Path.Combine(FileSystem.AppDataDirectory, "maps"));
     }
 
     private async Task TouchAsync(string key)
@@ -116,5 +174,15 @@ public class OfflineDatabaseService
             CacheKey = key,
             UpdatedAtUtc = DateTime.UtcNow
         });
+    }
+
+    private static void DeleteFolderIfExists(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        Directory.Delete(path, true);
     }
 }

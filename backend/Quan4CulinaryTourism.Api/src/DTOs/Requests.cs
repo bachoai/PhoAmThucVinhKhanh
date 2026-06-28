@@ -226,6 +226,35 @@ public class CollectAnalyticsRequest
     public Dictionary<string, object> Metadata { get; set; } = [];
 }
 
+public class CreateQrActivationRequest
+{
+    [Required, MaxLength(100)]
+    public string Code { get; set; } = string.Empty;
+
+    [Required]
+    public string PoiId { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    public string Title { get; set; } = string.Empty;
+
+    [Required, MaxLength(100)]
+    public string StopZone { get; set; } = string.Empty;
+
+    public string? StopAddress { get; set; }
+
+    [Range(0, int.MaxValue)]
+    public int SortOrder { get; set; }
+
+    public string? Description { get; set; }
+
+    [RegularExpression("^(prefer_audio|audio|tts)$")]
+    public string ScanMode { get; set; } = "prefer_audio";
+
+    public bool IsActive { get; set; } = true;
+}
+
+public class UpdateQrActivationRequest : CreateQrActivationRequest;
+
 public class UsageHistoryRequest : PaginationParams
 {
     public string? EventName { get; set; }

@@ -61,10 +61,10 @@ public partial class PoiDetailViewModel : BaseViewModel
         Title = "Chi tiết địa điểm";
     }
 
-    public async Task InitializeAsync(string poiId)
+    public async Task InitializeAsync(string poiId, string? autoplayMode = null, string source = "detail")
     {
         SelectedLanguage = _settingsService.GetLanguage();
-        await LoadAsync(poiId);
+        await LoadAsync(poiId, autoplayMode, source);
     }
 
     public void AttachAudioEvents()
@@ -108,13 +108,6 @@ public partial class PoiDetailViewModel : BaseViewModel
                 Audio.LocalAudioPath,
                 Poi?.Name,
                 "detail");
-
-            await _analyticsApiService.CollectAsync(new CollectAnalyticsRequest
-            {
-                EventName = "audio_played",
-                PoiId = Poi?.Id,
-                Lang = SelectedLanguage
-            });
         }
         catch (Exception ex)
         {
@@ -189,13 +182,6 @@ public partial class PoiDetailViewModel : BaseViewModel
                 Poi.NarrationText,
                 Poi.Name,
                 "detail");
-
-            await _analyticsApiService.CollectAsync(new CollectAnalyticsRequest
-            {
-                EventName = "tts_played",
-                PoiId = Poi.Id,
-                Lang = SelectedLanguage
-            });
         }
         catch
         {
@@ -226,7 +212,7 @@ public partial class PoiDetailViewModel : BaseViewModel
         await Shell.Current.GoToAsync("//map");
     }
 
-    private async Task LoadAsync(string poiId)
+    private async Task LoadAsync(string poiId, string? autoplayMode, string source)
     {
         await RunBusyAsync(async () =>
         {
@@ -272,9 +258,41 @@ public partial class PoiDetailViewModel : BaseViewModel
             {
                 EventName = "poi_viewed",
                 PoiId = Poi.Id,
-                Lang = SelectedLanguage
+                Lang = SelectedLanguage,
+                Metadata =
+                {
+                    ["source"] = source
+                }
             });
+
+            if (!string.IsNullOrWhiteSpace(autoplayMode))
+            {
+                await TryAutoplayAsync(autoplayMode, source);
+            }
         }, "Không tải được chi tiết địa điểm.");
+    }
+
+    private async Task TryAutoplayAsync(string autoplayMode, string source)
+    {
+        if (Poi is null)
+        {
+            return;
+        }
+
+        var normalizedMode = autoplayMode.Trim().ToLowerInvariant();
+        var hasAudio = Audio is not null && (!string.IsNullOrWhiteSpace(Audio.AudioUrl) || !string.IsNullOrWhiteSpace(Audio.LocalAudioPath));
+        var hasTts = !string.IsNullOrWhiteSpace(Poi.NarrationText);
+
+        if ((normalizedMode == "audio" || normalizedMode == "prefer_audio") && hasAudio)
+        {
+            await _audioPlayerService.PlayPoiAudioAsync(Poi.Id, SelectedLanguage, Audio!.AudioUrl, Audio.LocalAudioPath, Poi.Name, source);
+            return;
+        }
+
+        if ((normalizedMode == "tts" || normalizedMode == "prefer_audio") && hasTts)
+        {
+            await _audioPlayerService.SpeakPoiDescriptionAsync(Poi.Id, SelectedLanguage, Poi.NarrationText, Poi.Name, source);
+        }
     }
 
     private void OnPlaybackStateChanged(object? sender, AudioPlaybackStateChangedEventArgs args)

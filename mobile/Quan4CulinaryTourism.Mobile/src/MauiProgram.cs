@@ -5,6 +5,7 @@ using Quan4CulinaryTourism.Mobile.LocalDatabase;
 using Quan4CulinaryTourism.Mobile.Services;
 using Quan4CulinaryTourism.Mobile.ViewModels;
 using Quan4CulinaryTourism.Mobile.Views;
+using ZXing.Net.Maui.Controls;
 
 namespace Quan4CulinaryTourism.Mobile;
 
@@ -18,6 +19,7 @@ public static class MauiProgram
             .UseMauiCommunityToolkit()
             .UseMauiMaps()
             .AddAudio()
+            .UseBarcodeReader()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -33,12 +35,16 @@ public static class MauiProgram
         builder.Services.AddSingleton<LocationTrackingService>();
         builder.Services.AddSingleton<LocationService>();
         builder.Services.AddSingleton<AudioPlayerService>();
+        builder.Services.AddSingleton<NarrationEngineService>();
         builder.Services.AddSingleton<AudioDownloadService>();
+        builder.Services.AddSingleton<OfflinePackService>();
+        builder.Services.AddSingleton<OfflineMapService>();
         builder.Services.AddSingleton<HealthApiService>();
         builder.Services.AddSingleton<CategoryApiService>();
         builder.Services.AddSingleton<PoiApiService>();
         builder.Services.AddSingleton<AudioApiService>();
         builder.Services.AddSingleton<AnalyticsApiService>();
+        builder.Services.AddSingleton<QrActivationApiService>();
         builder.Services.AddSingleton<MapsApiService>();
         builder.Services.AddSingleton<GeofenceService>();
         builder.Services.AddSingleton<AppShell>();

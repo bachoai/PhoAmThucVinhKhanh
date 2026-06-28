@@ -61,7 +61,9 @@ public class OwnerService
             ApprovedSubmissions = submissions.Count(x => x.Status == SharedConstants.SubmissionApproved),
             RejectedSubmissions = submissions.Count(x => x.Status == SharedConstants.SubmissionRejected),
             TotalViews = poiIds.Count == 0 ? 0 : await _analyticsRepository.CountByEventNameAndPoiIdsAsync("poi_viewed", poiIds, cancellationToken),
-            TotalAudioPlays = poiIds.Count == 0 ? 0 : await _analyticsRepository.CountByEventNameAndPoiIdsAsync("audio_played", poiIds, cancellationToken)
+            TotalAudioPlays = poiIds.Count == 0
+                ? 0
+                : await _analyticsRepository.CountByEventNamesAndPoiIdsAsync(["audio_played", "tts_played"], poiIds, cancellationToken)
         };
     }
 

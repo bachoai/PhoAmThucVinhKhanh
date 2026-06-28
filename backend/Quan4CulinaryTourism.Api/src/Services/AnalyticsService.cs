@@ -17,6 +17,7 @@ public class AnalyticsService
 
     public async Task CollectAsync(CollectAnalyticsRequest request, CancellationToken cancellationToken = default)
     {
+        var metadata = NormalizeMetadata(request.Metadata);
         var entity = new AnalyticsEvent
         {
             EventName = request.EventName,
@@ -25,7 +26,14 @@ public class AnalyticsService
             PageViewId = request.PageViewId,
             PoiId = request.PoiId,
             Lang = request.Lang,
-            Metadata = NormalizeMetadata(request.Metadata)
+            Latitude = GetDouble(metadata, "latitude"),
+            Longitude = GetDouble(metadata, "longitude"),
+            AccuracyMeters = GetDouble(metadata, "accuracyMeters"),
+            ListenDurationSeconds = GetDouble(metadata, "listenDurationSeconds"),
+            IsBackground = GetBool(metadata, "background"),
+            TrackingSource = GetString(metadata, "trackingSource") ?? GetString(metadata, "source"),
+            ContentType = GetString(metadata, "contentType"),
+            Metadata = metadata
         };
         await _analyticsRepository.CreateAsync(entity, cancellationToken);
     }
@@ -35,10 +43,13 @@ public class AnalyticsService
         return new AnalyticsSummaryResponse
         {
             PoiViewedCount = await _analyticsRepository.CountByEventNameAsync("poi_viewed", cancellationToken),
-            AudioPlayedCount = await _analyticsRepository.CountByEventNameAsync("audio_played", cancellationToken),
+            AudioPlayedCount = await _analyticsRepository.CountByEventNamesAsync(["audio_played", "tts_played"], cancellationToken),
             SearchExecutedCount = await _analyticsRepository.CountByEventNameAsync("search_executed", cancellationToken),
+            AverageListenDurationSeconds = await _analyticsRepository.GetAverageListenDurationSecondsAsync(cancellationToken),
             TopPoiViews = await _analyticsRepository.GetTopPoiViewsAsync(cancellationToken),
-            TopPoiAudioPlays = await _analyticsRepository.GetTopAudioPlaysAsync(cancellationToken)
+            TopPoiAudioPlays = await _analyticsRepository.GetTopAudioPlaysAsync(cancellationToken),
+            HeatmapPoints = await _analyticsRepository.GetHeatmapPointsAsync(cancellationToken: cancellationToken),
+            RecentRouteTraces = await _analyticsRepository.GetRecentRouteTracesAsync(cancellationToken: cancellationToken)
         };
     }
 
@@ -81,6 +92,55 @@ public class AnalyticsService
             JsonValueKind.Object => element.EnumerateObject().ToDictionary(prop => prop.Name, prop => NormalizeJsonElement(prop.Value)),
             JsonValueKind.Null or JsonValueKind.Undefined => string.Empty,
             _ => element.ToString()
+        };
+    }
+
+    private static double? GetDouble(IReadOnlyDictionary<string, object> metadata, string key)
+    {
+        if (!metadata.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            double doubleValue => doubleValue,
+            float floatValue => floatValue,
+            decimal decimalValue => (double)decimalValue,
+            int intValue => intValue,
+            long longValue => longValue,
+            string stringValue when double.TryParse(stringValue, out var parsedValue) => parsedValue,
+            _ => null
+        };
+    }
+
+    private static bool? GetBool(IReadOnlyDictionary<string, object> metadata, string key)
+    {
+        if (!metadata.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            bool boolValue => boolValue,
+            string stringValue when bool.TryParse(stringValue, out var parsedValue) => parsedValue,
+            _ => null
+        };
+    }
+
+    private static string? GetString(IReadOnlyDictionary<string, object> metadata, string key)
+    {
+        if (!metadata.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            null => null,
+            string stringValue => stringValue,
+            _ => value.ToString()
         };
     }
 }

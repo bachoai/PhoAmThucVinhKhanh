@@ -9,7 +9,20 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { useI18n } from '../i18n/provider';
 import { formatDateTime } from '../utils/format';
 
-const EVENT_OPTIONS = ['poi_viewed', 'audio_played', 'search_executed', 'nearby_requested', 'language_changed'];
+const EVENT_OPTIONS = [
+  'poi_viewed',
+  'audio_played',
+  'tts_played',
+  'search_executed',
+  'nearby_requested',
+  'language_changed',
+  'offline_audio_downloaded',
+  'geofence_triggered',
+  'location_sample',
+  'narration_completed',
+  'narration_interrupted',
+  'narration_stopped',
+];
 
 export function UsageHistoryPage() {
   const { t } = useI18n();

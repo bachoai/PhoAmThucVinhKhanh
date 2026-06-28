@@ -28,16 +28,29 @@ public partial class AudioPlayerService
         var focusState = AudioFocusRequest.Granted;
         if (OperatingSystem.IsAndroidVersionAtLeast(26))
         {
-            var audioAttributes = new AudioAttributes.Builder()
-                .SetUsage(AudioUsageKind.Media)
-                .SetContentType(AudioContentType.Speech)
+            var audioAttributesBuilder = new AudioAttributes.Builder()
+                ?? throw new InvalidOperationException("Khong tao duoc audio attributes builder tren Android.");
+
+            audioAttributesBuilder = audioAttributesBuilder.SetUsage(AudioUsageKind.Media)
+                ?? throw new InvalidOperationException("Khong dat duoc audio usage tren Android.");
+            audioAttributesBuilder = audioAttributesBuilder.SetContentType(AudioContentType.Speech)
+                ?? throw new InvalidOperationException("Khong dat duoc audio content type tren Android.");
+
+            var audioAttributes = audioAttributesBuilder
                 .Build()
                 ?? throw new InvalidOperationException("Khong tao duoc audio attributes tren Android.");
 
-            _androidAudioFocusRequest ??= new AudioFocusRequestClass.Builder(AudioFocus.GainTransientMayDuck)
-                .SetAudioAttributes(audioAttributes)
-                .SetAcceptsDelayedFocusGain(false)
-                .SetOnAudioFocusChangeListener(_androidAudioFocusChangeListener)
+            var audioFocusRequestBuilder = new AudioFocusRequestClass.Builder(AudioFocus.GainTransientMayDuck)
+                ?? throw new InvalidOperationException("Khong tao duoc audio focus request builder tren Android.");
+
+            audioFocusRequestBuilder = audioFocusRequestBuilder.SetAudioAttributes(audioAttributes)
+                ?? throw new InvalidOperationException("Khong gan duoc audio attributes vao focus request.");
+            audioFocusRequestBuilder = audioFocusRequestBuilder.SetAcceptsDelayedFocusGain(false)
+                ?? throw new InvalidOperationException("Khong dat duoc delayed focus gain tren Android.");
+            audioFocusRequestBuilder = audioFocusRequestBuilder.SetOnAudioFocusChangeListener(_androidAudioFocusChangeListener)
+                ?? throw new InvalidOperationException("Khong gan duoc audio focus listener tren Android.");
+
+            _androidAudioFocusRequest ??= audioFocusRequestBuilder
                 .Build()
                 ?? throw new InvalidOperationException("Khong tao duoc audio focus request tren Android.");
 

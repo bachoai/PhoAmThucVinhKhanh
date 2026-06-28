@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Plugin.Maui.Audio;
 using Quan4CulinaryTourism.Mobile.Config;
 
@@ -6,6 +7,7 @@ namespace Quan4CulinaryTourism.Mobile.Services;
 public partial class AudioPlayerService : IDisposable
 {
     private readonly IAudioManager _audioManager;
+    private readonly AnalyticsApiService _analyticsApiService;
     private readonly HttpClient _httpClient;
     private readonly Lock _syncRoot = new();
     private readonly LinkedList<AudioPlaybackRequest> _queue = [];
@@ -22,12 +24,14 @@ public partial class AudioPlayerService : IDisposable
     private Stream? _currentStream;
     private CancellationTokenSource? _currentPlaybackCts;
     private AudioPlaybackRequest? _currentRequest;
+    private Stopwatch? _currentPlaybackStopwatch;
     private AudioPlaybackState _currentState = AudioPlaybackState.Idle;
     private bool _disposed;
 
-    public AudioPlayerService(IAudioManager audioManager, HttpClient httpClient)
+    public AudioPlayerService(IAudioManager audioManager, HttpClient httpClient, AnalyticsApiService analyticsApiService)
     {
         _audioManager = audioManager;
+        _analyticsApiService = analyticsApiService;
         _httpClient = httpClient;
         _requestPlatformPlaybackAccessAsync = _noopRequestAccess;
         _releasePlatformPlaybackAccess = _noopAction;
@@ -45,6 +49,17 @@ public partial class AudioPlayerService : IDisposable
             lock (_syncRoot)
             {
                 return _currentState is AudioPlaybackState.Preparing or AudioPlaybackState.Playing or AudioPlaybackState.Paused;
+            }
+        }
+    }
+
+    public bool HasActiveOrPendingPlayback
+    {
+        get
+        {
+            lock (_syncRoot)
+            {
+                return _currentRequest is not null || _queue.Count > 0;
             }
         }
     }
@@ -312,6 +327,7 @@ public partial class AudioPlayerService : IDisposable
             try
             {
                 await ExecuteRequestAsync(request);
+                await TrackPlaybackFinishedAsync(request, AudioPlaybackState.Completed, GetPlaybackDurationSeconds());
                 RaiseStateChanged(AudioPlaybackState.Completed, request, "Da phat xong thuyet minh.");
             }
             catch (OperationCanceledException)
@@ -381,9 +397,11 @@ public partial class AudioPlayerService : IDisposable
         lock (_syncRoot)
         {
             _currentState = AudioPlaybackState.Playing;
+            _currentPlaybackStopwatch = Stopwatch.StartNew();
         }
 
         RaiseStateChanged(AudioPlaybackState.Playing, request, BuildPlayingMessage(request));
+        _ = TrackPlaybackStartedAsync(request);
         await TextToSpeech.Default.SpeakAsync(request.TtsText!, cancelToken: playbackCts.Token);
     }
 
@@ -424,9 +442,11 @@ public partial class AudioPlayerService : IDisposable
             lock (_syncRoot)
             {
                 _currentState = AudioPlaybackState.Playing;
+                _currentPlaybackStopwatch = Stopwatch.StartNew();
             }
 
             RaiseStateChanged(AudioPlaybackState.Playing, request, BuildPlayingMessage(request));
+            _ = TrackPlaybackStartedAsync(request);
             _player.Play();
             await completionSource.Task;
         }
@@ -439,6 +459,7 @@ public partial class AudioPlayerService : IDisposable
     private async Task StopInternalAsync(bool clearQueue, AudioPlaybackState stopState, string message, bool raiseEvent = true)
     {
         AudioPlaybackRequest? interruptedRequest;
+        double durationSeconds;
 
         lock (_syncRoot)
         {
@@ -452,11 +473,20 @@ public partial class AudioPlayerService : IDisposable
 
             _currentPlaybackCts?.Cancel();
             _currentState = stopState;
+            _currentPlaybackStopwatch?.Stop();
+            durationSeconds = _currentPlaybackStopwatch is null
+                ? 0
+                : Math.Round(_currentPlaybackStopwatch.Elapsed.TotalSeconds, 2);
         }
 
         _player?.Stop();
         ReleasePlaybackResources();
         _releasePlatformPlaybackAccess();
+
+        if (interruptedRequest is not null)
+        {
+            await TrackPlaybackFinishedAsync(interruptedRequest, stopState, durationSeconds);
+        }
 
         if (raiseEvent && interruptedRequest is not null)
         {
@@ -478,6 +508,7 @@ public partial class AudioPlayerService : IDisposable
             _currentBuffer = null;
             _currentStream?.Dispose();
             _currentStream = null;
+            _currentPlaybackStopwatch = null;
         }
     }
 
@@ -525,6 +556,74 @@ public partial class AudioPlayerService : IDisposable
                 request.ContentType,
                 request.Title,
                 message));
+    }
+
+    private double GetPlaybackDurationSeconds()
+    {
+        lock (_syncRoot)
+        {
+            return _currentPlaybackStopwatch is null
+                ? 0
+                : Math.Round(_currentPlaybackStopwatch.Elapsed.TotalSeconds, 2);
+        }
+    }
+
+    private Task TrackPlaybackStartedAsync(AudioPlaybackRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.PoiId))
+        {
+            return Task.CompletedTask;
+        }
+
+        return _analyticsApiService.CollectAsync(new DTOs.CollectAnalyticsRequest
+        {
+            EventName = request.ContentType == AudioPlaybackContentType.AudioFile ? "audio_played" : "tts_played",
+            PoiId = request.PoiId,
+            Lang = request.Language,
+            Metadata =
+            {
+                ["source"] = request.Source,
+                ["contentType"] = request.ContentType.ToString(),
+                ["title"] = request.Title ?? string.Empty,
+                ["offline"] = !string.IsNullOrWhiteSpace(request.LocalAudioPath)
+            }
+        });
+    }
+
+    private Task TrackPlaybackFinishedAsync(AudioPlaybackRequest request, AudioPlaybackState state, double durationSeconds)
+    {
+        if (string.IsNullOrWhiteSpace(request.PoiId) || durationSeconds <= 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        var eventName = state switch
+        {
+            AudioPlaybackState.Completed => "narration_completed",
+            AudioPlaybackState.Interrupted => "narration_interrupted",
+            AudioPlaybackState.Stopped => "narration_stopped",
+            _ => null
+        };
+
+        if (eventName is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        return _analyticsApiService.CollectAsync(new DTOs.CollectAnalyticsRequest
+        {
+            EventName = eventName,
+            PoiId = request.PoiId,
+            Lang = request.Language,
+            Metadata =
+            {
+                ["source"] = request.Source,
+                ["contentType"] = request.ContentType.ToString(),
+                ["title"] = request.Title ?? string.Empty,
+                ["listenDurationSeconds"] = durationSeconds,
+                ["completionState"] = state.ToString()
+            }
+        });
     }
 
     private static string BuildPreparingMessage(AudioPlaybackRequest request)

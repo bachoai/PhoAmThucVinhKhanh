@@ -1,139 +1,168 @@
 using System.IO.Compression;
-using System.Text;
 using System.Text.Json;
-using Quan4CulinaryTourism.Api.DTOs;
-using Quan4CulinaryTourism.Api.Repositories;
+using Microsoft.Maui.Devices.Sensors;
+using Quan4CulinaryTourism.Mobile.Models;
 
-namespace Quan4CulinaryTourism.Api.Services;
+namespace Quan4CulinaryTourism.Mobile.Services;
 
-public class MapsService
+public sealed class OfflineMapService
 {
     private const string DefaultEntryFile = "index.html";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    private readonly MapPackRepository _mapPackRepository;
-    private readonly PoiRepository _poiRepository;
+    private readonly OfflineDatabaseService _offlineDatabaseService;
 
-    public MapsService(MapPackRepository mapPackRepository, PoiRepository poiRepository)
+    public OfflineMapService(OfflineDatabaseService offlineDatabaseService)
     {
-        _mapPackRepository = mapPackRepository;
-        _poiRepository = poiRepository;
+        _offlineDatabaseService = offlineDatabaseService;
     }
 
-    public async Task<MapPackResponse?> GetPackManifestAsync(CancellationToken cancellationToken = default)
+    public async Task<MapPackResponse?> PrepareRenderablePackAsync(
+        MapPackResponse? mapPack,
+        IReadOnlyCollection<PoiResponse> pois,
+        Location? userLocation,
+        CancellationToken cancellationToken = default)
     {
-        var pack = await _mapPackRepository.GetActiveAsync(cancellationToken);
-        if (pack is null)
+        await _offlineDatabaseService.InitializeAsync();
+
+        var workingPack = mapPack ?? new MapPackResponse
+        {
+            Version = "runtime",
+            Name = "Offline Runtime Map",
+            EntryFile = DefaultEntryFile,
+            IsActive = true
+        };
+
+        var templatePath = await EnsureTemplatePathAsync(workingPack, cancellationToken);
+        if (string.IsNullOrWhiteSpace(templatePath) || !File.Exists(templatePath))
         {
             return null;
         }
 
-        return new MapPackResponse
-        {
-            Id = pack.Id,
-            Version = pack.Version,
-            Name = pack.Name,
-            DownloadUrl = ResolveDownloadUrl(pack),
-            EntryFile = DefaultEntryFile,
-            Sha256 = pack.Sha256,
-            SizeBytes = pack.SizeBytes,
-            IsActive = pack.IsActive,
-            PublishedAt = pack.PublishedAt
-        };
+        workingPack.LocalEntryHtmlPath = await RenderHtmlAsync(workingPack, templatePath, pois, userLocation, cancellationToken);
+        workingPack.DownloadedAtUtc ??= DateTime.UtcNow;
+
+        await _offlineDatabaseService.SaveMapPackAsync(workingPack);
+        return workingPack;
     }
 
-    public async Task<(byte[] Content, string FileName)> CreateOfflinePackAsync(CancellationToken cancellationToken = default)
+    private async Task<string> EnsureTemplatePathAsync(MapPackResponse mapPack, CancellationToken cancellationToken)
     {
-        var pack = await _mapPackRepository.GetActiveAsync(cancellationToken) ?? new Models.MapPack
-        {
-            Version = "v1",
-            Name = "Default Quan 4 Map Pack",
-            IsActive = true,
-            PublishedAt = DateTime.UtcNow
-        };
+        var entryFile = string.IsNullOrWhiteSpace(mapPack.EntryFile) ? DefaultEntryFile : mapPack.EntryFile;
 
-        var archive = await BuildArchiveAsync(cancellationToken);
-        return (archive, $"quan4-offline-map-{SanitizeFileName(pack.Version)}.zip");
+        if (!string.IsNullOrWhiteSpace(mapPack.LocalPackagePath) && File.Exists(mapPack.LocalPackagePath))
+        {
+            var extension = Path.GetExtension(mapPack.LocalPackagePath);
+            if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                var extractFolder = Path.Combine(FileSystem.AppDataDirectory, "maps", $"pack-{Sanitize(mapPack.Version)}");
+                var entryPath = Path.Combine(extractFolder, entryFile);
+
+                if (!File.Exists(entryPath))
+                {
+                    if (Directory.Exists(extractFolder))
+                    {
+                        Directory.Delete(extractFolder, true);
+                    }
+
+                    Directory.CreateDirectory(extractFolder);
+                    ZipFile.ExtractToDirectory(mapPack.LocalPackagePath, extractFolder, true);
+                }
+
+                mapPack.ExtractedDirectoryPath = extractFolder;
+                if (File.Exists(entryPath))
+                {
+                    return entryPath;
+                }
+            }
+            else if (extension.Equals(".html", StringComparison.OrdinalIgnoreCase) || extension.Equals(".htm", StringComparison.OrdinalIgnoreCase))
+            {
+                return mapPack.LocalPackagePath;
+            }
+        }
+
+        return await EnsureFallbackTemplateAsync(cancellationToken);
     }
 
-    private async Task<byte[]> BuildArchiveAsync(CancellationToken cancellationToken)
+    private async Task<string> RenderHtmlAsync(
+        MapPackResponse mapPack,
+        string templatePath,
+        IReadOnlyCollection<PoiResponse> pois,
+        Location? userLocation,
+        CancellationToken cancellationToken)
     {
-        var pois = await _poiRepository.GetPublicPoisAsync(cancellationToken);
-        var poiPayload = pois
+        var template = await File.ReadAllTextAsync(templatePath, cancellationToken);
+        if (!template.Contains("__POI_DATA__", StringComparison.Ordinal) &&
+            !template.Contains("__USER_LOCATION__", StringComparison.Ordinal) &&
+            !template.Contains("__PACK_NAME__", StringComparison.Ordinal))
+        {
+            return templatePath;
+        }
+
+        var renderedFolder = Path.Combine(FileSystem.AppDataDirectory, "maps", "rendered");
+        Directory.CreateDirectory(renderedFolder);
+
+        var renderedHtml = template
+            .Replace("__PACK_NAME__", System.Net.WebUtility.HtmlEncode(mapPack.Name), StringComparison.Ordinal)
+            .Replace("__POI_DATA__", SerializePois(pois), StringComparison.Ordinal)
+            .Replace("__USER_LOCATION__", SerializeUserLocation(userLocation), StringComparison.Ordinal);
+
+        var renderedPath = Path.Combine(renderedFolder, $"offline-map-{Sanitize(mapPack.Version)}.html");
+        await File.WriteAllTextAsync(renderedPath, renderedHtml, cancellationToken);
+        return renderedPath;
+    }
+
+    private static string SerializePois(IReadOnlyCollection<PoiResponse> pois)
+    {
+        var payload = pois
+            .Where(static poi => poi.Latitude != 0 && poi.Longitude != 0)
+            .OrderByDescending(static poi => poi.Priority)
+            .ThenBy(static poi => poi.Name)
             .Select(poi => new
             {
                 poi.Id,
                 poi.Name,
                 poi.Description,
-                poi.Address,
-                poi.Ward,
-                poi.District,
-                poi.City,
-                Latitude = poi.Location.Coordinates.Latitude,
-                Longitude = poi.Location.Coordinates.Longitude,
-                poi.Priority
+                poi.Latitude,
+                poi.Longitude,
+                poi.Priority,
+                DisplayAddress = poi.DisplayAddress
             })
-            .Where(static poi => poi.Latitude != 0 && poi.Longitude != 0)
-            .OrderByDescending(static poi => poi.Priority)
-            .ThenBy(static poi => poi.Name)
             .ToList();
 
-        await using var stream = new MemoryStream();
-        using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+        return JsonSerializer.Serialize(payload, JsonOptions);
+    }
+
+    private static string SerializeUserLocation(Location? userLocation) =>
+        userLocation is null
+            ? "null"
+            : JsonSerializer.Serialize(new
+            {
+                userLocation.Latitude,
+                userLocation.Longitude
+            }, JsonOptions);
+
+    private static async Task<string> EnsureFallbackTemplateAsync(CancellationToken cancellationToken)
+    {
+        var folder = Path.Combine(FileSystem.AppDataDirectory, "maps", "templates");
+        Directory.CreateDirectory(folder);
+
+        var templatePath = Path.Combine(folder, "default-offline-map.html");
+        if (!File.Exists(templatePath))
         {
-            await WriteEntryAsync(archive, DefaultEntryFile, BuildTemplateHtml(), cancellationToken);
-            await WriteEntryAsync(
-                archive,
-                "pois.json",
-                JsonSerializer.Serialize(poiPayload, JsonOptions),
-                cancellationToken);
-            await WriteEntryAsync(
-                archive,
-                "metadata.json",
-                JsonSerializer.Serialize(new
-                {
-                    generatedAtUtc = DateTime.UtcNow,
-                    entryFile = DefaultEntryFile,
-                    poiCount = poiPayload.Count
-                }, JsonOptions),
-                cancellationToken);
+            await File.WriteAllTextAsync(templatePath, BuildFallbackTemplate(), cancellationToken);
         }
 
-        return stream.ToArray();
+        return templatePath;
     }
 
-    private static async Task WriteEntryAsync(ZipArchive archive, string entryName, string content, CancellationToken cancellationToken)
-    {
-        var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
-        await using var entryStream = entry.Open();
-        await using var writer = new StreamWriter(entryStream, Encoding.UTF8);
-        await writer.WriteAsync(content.AsMemory(), cancellationToken);
-        await writer.FlushAsync(cancellationToken);
-    }
-
-    private static string ResolveDownloadUrl(Models.MapPack pack)
-    {
-        if (!string.IsNullOrWhiteSpace(pack.DownloadUrl))
-        {
-            return pack.DownloadUrl;
-        }
-
-        return $"/api/v1/maps/offline-pack?version={Uri.EscapeDataString(pack.Version)}";
-    }
-
-    private static string SanitizeFileName(string value)
+    private static string Sanitize(string value)
     {
         var invalid = Path.GetInvalidFileNameChars();
-        var builder = new StringBuilder(value.Length);
-        foreach (var character in value)
-        {
-            builder.Append(invalid.Contains(character) ? '-' : character);
-        }
-
-        return builder.ToString();
+        return string.Concat(value.Select(character => invalid.Contains(character) ? '-' : character));
     }
 
-    private static string BuildTemplateHtml() =>
+    private static string BuildFallbackTemplate() =>
         """
 <!doctype html>
 <html lang="vi">
@@ -159,7 +188,6 @@ public class MapsService
       padding: 14px 16px 10px;
       border-bottom: 1px solid rgba(251, 146, 60, 0.28);
       background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(10px);
     }
     header h1 {
       margin: 0;
@@ -219,7 +247,6 @@ public class MapsService
       stroke-width: 3;
       filter: drop-shadow(0 6px 10px rgba(249, 115, 22, 0.3));
     }
-    .poi:hover { transform: scale(1.05); }
     .poi.active circle { fill: #0f766e; }
     .user circle {
       fill: #2563eb;

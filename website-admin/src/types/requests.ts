@@ -83,6 +83,20 @@ export interface CreateTourRequest {
 
 export interface UpdateTourRequest extends CreateTourRequest {}
 
+export interface CreateQrActivationRequest {
+  code: string;
+  poiId: string;
+  title: string;
+  stopZone: string;
+  stopAddress?: string;
+  sortOrder: number;
+  description?: string;
+  scanMode: 'prefer_audio' | 'audio' | 'tts';
+  isActive: boolean;
+}
+
+export interface UpdateQrActivationRequest extends CreateQrActivationRequest {}
+
 export interface ApproveRequest {
   adminNote?: string;
 }

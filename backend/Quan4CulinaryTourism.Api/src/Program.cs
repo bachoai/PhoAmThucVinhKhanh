@@ -74,6 +74,7 @@ builder.Services.AddScoped<AuditLogRepository>();
 builder.Services.AddScoped<MediaFileRepository>();
 builder.Services.AddScoped<MapPackRepository>();
 builder.Services.AddScoped<TourRepository>();
+builder.Services.AddScoped<QrActivationRepository>();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CategoryService>();
@@ -87,6 +88,7 @@ builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<MapsService>();
 builder.Services.AddScoped<HealthService>();
 builder.Services.AddScoped<TourService>();
+builder.Services.AddScoped<QrActivationService>();
 
 var app = builder.Build();
 

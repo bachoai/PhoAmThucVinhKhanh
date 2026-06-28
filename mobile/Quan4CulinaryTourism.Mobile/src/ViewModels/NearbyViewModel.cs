@@ -11,6 +11,8 @@ namespace Quan4CulinaryTourism.Mobile.ViewModels;
 public partial class NearbyViewModel : BaseViewModel
 {
     private readonly PoiApiService _poiApiService;
+    private readonly OfflinePackService _offlinePackService;
+    private readonly ConnectivityService _connectivityService;
     private readonly LocationService _locationService;
     private readonly SettingsService _settingsService;
     private readonly AnalyticsApiService _analyticsApiService;
@@ -19,7 +21,7 @@ public partial class NearbyViewModel : BaseViewModel
     private int selectedRadius = 3000;
 
     [ObservableProperty]
-    private string statusMessage = "Cho phép GPS để tìm quán gần bạn.";
+    private string statusMessage = "Cho phep GPS de tim quan gan ban.";
 
     [ObservableProperty]
     private double latitude = AppConfig.DefaultLatitude;
@@ -35,16 +37,20 @@ public partial class NearbyViewModel : BaseViewModel
 
     public NearbyViewModel(
         PoiApiService poiApiService,
+        OfflinePackService offlinePackService,
+        ConnectivityService connectivityService,
         LocationService locationService,
         SettingsService settingsService,
         AnalyticsApiService analyticsApiService)
     {
         _poiApiService = poiApiService;
+        _offlinePackService = offlinePackService;
+        _connectivityService = connectivityService;
         _locationService = locationService;
         _settingsService = settingsService;
         _analyticsApiService = analyticsApiService;
 
-        Title = "Quán gần bạn";
+        Title = "Quan gan ban";
         NearbyPois = [];
         RadiusOptions = AppConfig.NearbyRadiusOptions;
     }
@@ -66,25 +72,39 @@ public partial class NearbyViewModel : BaseViewModel
             var hasPermission = await _locationService.CheckAndRequestPermissionAsync();
             if (!hasPermission)
             {
-                StatusMessage = "Chưa có quyền GPS. App đang dùng vị trí mặc định Quận 4.";
+                StatusMessage = "Chua co quyen GPS. App dang dung vi tri mac dinh Quan 4.";
             }
 
             var location = hasPermission ? await _locationService.GetCurrentLocationAsync() : null;
             Latitude = location?.Latitude ?? AppConfig.DefaultLatitude;
             Longitude = location?.Longitude ?? AppConfig.DefaultLongitude;
 
-            var pois = await _poiApiService.GetNearbyAsync(Latitude, Longitude, SelectedRadius, 20, SelectedLanguage);
+            List<NearbyPoiResponse> pois;
+            if (_connectivityService.IsOnline())
+            {
+                pois = await _poiApiService.GetNearbyAsync(Latitude, Longitude, SelectedRadius, 20, SelectedLanguage);
+                StatusMessage = $"Da tim {pois.Count} dia diem gan ban.";
+            }
+            else
+            {
+                pois = await _offlinePackService.GetNearbyOfflineAsync(Latitude, Longitude, SelectedRadius);
+                StatusMessage = $"Dang offline. Tim thay {pois.Count} dia diem gan tu cache.";
+            }
+
             NearbyPois.ReplaceWith(pois);
             HasNearbyResults = pois.Count > 0;
-            StatusMessage = $"Đã tìm {pois.Count} địa điểm gần bạn.";
 
             await _analyticsApiService.CollectAsync(new CollectAnalyticsRequest
             {
                 EventName = "nearby_requested",
                 Lang = SelectedLanguage,
-                Metadata = { ["radius"] = SelectedRadius }
+                Metadata =
+                {
+                    ["radius"] = SelectedRadius,
+                    ["offline"] = !_connectivityService.IsOnline()
+                }
             });
-        }, "Không lấy được danh sách địa điểm gần bạn.");
+        }, "Khong lay duoc danh sach dia diem gan ban.");
     }
 
     [RelayCommand]

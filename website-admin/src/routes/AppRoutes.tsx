@@ -19,6 +19,7 @@ const PoiCreatePage = lazy(async () => ({ default: (await import('../pages/PoiCr
 const PoiDetailPage = lazy(async () => ({ default: (await import('../pages/PoiDetailPage')).PoiDetailPage }));
 const PoiEditPage = lazy(async () => ({ default: (await import('../pages/PoiEditPage')).PoiEditPage }));
 const PoiListPage = lazy(async () => ({ default: (await import('../pages/PoiListPage')).PoiListPage }));
+const QrActivationPage = lazy(async () => ({ default: (await import('../pages/QrActivationPage')).QrActivationPage }));
 const TourManagementPage = lazy(async () => ({ default: (await import('../pages/TourManagementPage')).TourManagementPage }));
 const UsageHistoryPage = lazy(async () => ({ default: (await import('../pages/UsageHistoryPage')).UsageHistoryPage }));
 const UserManagementPage = lazy(async () => ({ default: (await import('../pages/UserManagementPage')).UserManagementPage }));
@@ -48,6 +49,7 @@ export function AppRoutes() {
             <Route path="/admin/audio" element={<AudioPage />} />
             <Route path="/admin/localizations" element={<LocalizationPage />} />
             <Route path="/admin/analytics" element={<AnalyticsPage />} />
+            <Route path="/admin/qr-activations" element={<QrActivationPage />} />
             <Route path="/admin/usage-history" element={<UsageHistoryPage />} />
             <Route path="/admin/tours" element={<TourManagementPage />} />
             <Route path="/admin/maps" element={<MapsPage />} />

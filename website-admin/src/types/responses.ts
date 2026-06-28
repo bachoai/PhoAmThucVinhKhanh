@@ -139,6 +139,30 @@ export interface TopPoiAnalyticsResponse {
   count: number;
 }
 
+export interface AnalyticsHeatmapPointResponse {
+  latitude: number;
+  longitude: number;
+  count: number;
+  lastSeenAt: string;
+}
+
+export interface AnalyticsRoutePointResponse {
+  latitude: number;
+  longitude: number;
+  isBackground: boolean;
+  source: string;
+  createdAt: string;
+}
+
+export interface AnalyticsRouteTraceResponse {
+  anonymousId: string;
+  sessionId?: string | null;
+  pointCount: number;
+  startedAt: string;
+  endedAt: string;
+  points: AnalyticsRoutePointResponse[];
+}
+
 export interface UsageHistoryEntryResponse {
   id: string;
   anonymousId?: string | null;
@@ -155,8 +179,11 @@ export interface AnalyticsSummaryResponse {
   poiViewedCount: number;
   audioPlayedCount: number;
   searchExecutedCount: number;
+  averageListenDurationSeconds: number;
   topPoiViews: TopPoiAnalyticsResponse[];
   topPoiAudioPlays: TopPoiAnalyticsResponse[];
+  heatmapPoints: AnalyticsHeatmapPointResponse[];
+  recentRouteTraces: AnalyticsRouteTraceResponse[];
 }
 
 export interface TourStopResponse {
@@ -175,6 +202,24 @@ export interface TourResponse {
   estimatedDurationMinutes: number;
   isActive: boolean;
   stops: TourStopResponse[];
+  updatedAt: string;
+}
+
+export interface QrActivationResponse {
+  id: string;
+  code: string;
+  poiId: string;
+  poiName: string;
+  poiAddress: string;
+  poiWard: string;
+  title: string;
+  stopZone: string;
+  stopAddress?: string | null;
+  sortOrder: number;
+  description?: string | null;
+  scanMode: 'prefer_audio' | 'audio' | 'tts';
+  deepLink: string;
+  isActive: boolean;
   updatedAt: string;
 }
 

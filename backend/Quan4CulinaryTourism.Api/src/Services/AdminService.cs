@@ -54,7 +54,7 @@ public class AdminService
             PendingOwnerRegistrations = await _ownerRegistrationRepository.CountPendingAsync(cancellationToken),
             PendingSubmissions = await _ownerSubmissionRepository.CountPendingAsync(cancellationToken),
             TotalPoiViews = await _analyticsRepository.CountByEventNameAsync("poi_viewed", cancellationToken),
-            TotalAudioPlays = await _analyticsRepository.CountByEventNameAsync("audio_played", cancellationToken)
+            TotalAudioPlays = await _analyticsRepository.CountByEventNamesAsync(["audio_played", "tts_played"], cancellationToken)
         };
     }
 

@@ -5,15 +5,20 @@
     <Grid RowDefinitions="Auto,*">
         <Border Margin="20,16,20,0">
             <VerticalStackLayout Spacing="10">
-                <Label Text="{Binding MapStatus}" TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
+                <Label Text="{Binding MapStatus}"
+                       TextColor="{AppThemeBinding Light={StaticResource LightMutedText}, Dark={StaticResource DarkMutedText}}" />
                 <HorizontalStackLayout Spacing="12">
                     <Button Text="Center" Command="{Binding CenterOnUserCommand}" />
-                    <Button Text="Refresh" Command="{Binding RefreshCommand}" BackgroundColor="{StaticResource Secondary}" />
+                    <Button Text="Refresh"
+                            Command="{Binding RefreshCommand}"
+                            BackgroundColor="{StaticResource Secondary}" />
                 </HorizontalStackLayout>
             </VerticalStackLayout>
         </Border>
+
         <VerticalStackLayout Grid.Row="1" Padding="20,16" Spacing="12">
-            <ContentView x:Name="MapHost" HeightRequest="320" />
+            <ContentView x:Name="MapHost" HeightRequest="360" />
+
             <CollectionView ItemsSource="{Binding Pois}" SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
@@ -22,10 +27,10 @@
                                 <Label Text="{Binding Name}" Style="{StaticResource SectionTitleLabel}" />
                                 <Label Text="{Binding DisplayAddress}" />
                                 <HorizontalStackLayout Spacing="10">
-                                    <Button Text="Xem chi tiết"
+                                    <Button Text="Xem chi tiet"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenDetailCommand}"
                                             CommandParameter="{Binding Id}" />
-                                    <Button Text="Mở Google Maps"
+                                    <Button Text="Mo Google Maps"
                                             BackgroundColor="{StaticResource Secondary}"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenExternalMapCommand}"
                                             CommandParameter="{Binding Id}" />

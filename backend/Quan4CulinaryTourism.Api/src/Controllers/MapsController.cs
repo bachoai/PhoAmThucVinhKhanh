@@ -12,4 +12,11 @@ public class MapsController : BaseApiController
 
     [HttpGet("pack-manifest")]
     public Task<IActionResult> GetPackManifest() => ExecuteAsync(() => _mapsService.GetPackManifestAsync(), "Lấy map manifest thành công");
+
+    [HttpGet("offline-pack")]
+    public async Task<IActionResult> DownloadOfflinePack(CancellationToken cancellationToken)
+    {
+        var pack = await _mapsService.CreateOfflinePackAsync(cancellationToken);
+        return File(pack.Content, "application/zip", pack.FileName);
+    }
 }

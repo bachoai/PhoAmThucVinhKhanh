@@ -49,7 +49,31 @@ public class PoiRepository
     public Task<List<Poi>> GetByOwnerIdAsync(string ownerId, CancellationToken cancellationToken = default) =>
         _context.Pois.Find(x => x.OwnerId == ownerId).ToListAsync(cancellationToken);
 
+    public Task<List<Poi>> GetPublicFilteredAsync(PoiSearchRequest request, CancellationToken cancellationToken = default) =>
+        _context.Pois.Find(BuildSearchFilter(request, true))
+            .SortByDescending(x => x.Priority)
+            .ThenByDescending(x => x.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
     public async Task<List<Poi>> SearchAsync(PoiSearchRequest request, bool publicOnly = true, CancellationToken cancellationToken = default)
+    {
+        var filter = BuildSearchFilter(request, publicOnly);
+
+        var page = Math.Max(request.Page, 1);
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+
+        return await _context.Pois.Find(filter)
+            .SortByDescending(x => x.Priority)
+            .ThenByDescending(x => x.UpdatedAt)
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<long> CountAsync(FilterDefinition<Poi>? filter = null, CancellationToken cancellationToken = default) =>
+        _context.Pois.CountDocumentsAsync(filter ?? FilterDefinition<Poi>.Empty, cancellationToken: cancellationToken);
+
+    private static FilterDefinition<Poi> BuildSearchFilter(PoiSearchRequest request, bool publicOnly)
     {
         var filter = Builders<Poi>.Filter.Empty;
         if (publicOnly)
@@ -75,17 +99,6 @@ public class PoiRepository
             filter &= Builders<Poi>.Filter.Eq(x => x.PriceRange, request.PriceRange);
         }
 
-        var page = Math.Max(request.Page, 1);
-        var pageSize = Math.Clamp(request.PageSize, 1, 100);
-
-        return await _context.Pois.Find(filter)
-            .SortByDescending(x => x.Priority)
-            .ThenByDescending(x => x.UpdatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
-            .ToListAsync(cancellationToken);
+        return filter;
     }
-
-    public Task<long> CountAsync(FilterDefinition<Poi>? filter = null, CancellationToken cancellationToken = default) =>
-        _context.Pois.CountDocumentsAsync(filter ?? FilterDefinition<Poi>.Empty, cancellationToken: cancellationToken);
 }

@@ -89,7 +89,9 @@ public class MongoIndexInitializer
             new CreateIndexModel<AnalyticsEvent>(Builders<AnalyticsEvent>.IndexKeys.Ascending(x => x.EventName)),
             new CreateIndexModel<AnalyticsEvent>(Builders<AnalyticsEvent>.IndexKeys.Ascending(x => x.PoiId)),
             new CreateIndexModel<AnalyticsEvent>(Builders<AnalyticsEvent>.IndexKeys.Ascending(x => x.CreatedAt)),
-            new CreateIndexModel<AnalyticsEvent>(Builders<AnalyticsEvent>.IndexKeys.Ascending(x => x.AnonymousId).Ascending(x => x.SessionId))
+            new CreateIndexModel<AnalyticsEvent>(Builders<AnalyticsEvent>.IndexKeys.Ascending(x => x.AnonymousId).Ascending(x => x.SessionId)),
+            new CreateIndexModel<AnalyticsEvent>(Builders<AnalyticsEvent>.IndexKeys.Ascending(x => x.EventName).Ascending(x => x.CreatedAt)),
+            new CreateIndexModel<AnalyticsEvent>(Builders<AnalyticsEvent>.IndexKeys.Ascending(x => x.SessionId).Ascending(x => x.CreatedAt))
         ], cancellationToken);
 
         await _context.AuditLogs.Indexes.CreateManyAsync(
@@ -120,6 +122,15 @@ public class MongoIndexInitializer
             new CreateIndexModel<Tour>(Builders<Tour>.IndexKeys.Ascending(x => x.Lang)),
             new CreateIndexModel<Tour>(Builders<Tour>.IndexKeys.Ascending(x => x.UpdatedAt)),
             new CreateIndexModel<Tour>(Builders<Tour>.IndexKeys.Text(x => x.Title).Text(x => x.Description))
+        ], cancellationToken);
+
+        await _context.QrActivations.Indexes.CreateManyAsync(
+        [
+            new CreateIndexModel<QrActivation>(Builders<QrActivation>.IndexKeys.Ascending(x => x.Code), new CreateIndexOptions { Unique = true }),
+            new CreateIndexModel<QrActivation>(Builders<QrActivation>.IndexKeys.Ascending(x => x.PoiId)),
+            new CreateIndexModel<QrActivation>(Builders<QrActivation>.IndexKeys.Ascending(x => x.StopZone).Ascending(x => x.SortOrder)),
+            new CreateIndexModel<QrActivation>(Builders<QrActivation>.IndexKeys.Ascending(x => x.IsActive)),
+            new CreateIndexModel<QrActivation>(Builders<QrActivation>.IndexKeys.Ascending(x => x.UpdatedAt))
         ], cancellationToken);
     }
 }

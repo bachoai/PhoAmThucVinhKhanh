@@ -21,6 +21,7 @@ public class LocalDbContext
         await _connection.CreateTableAsync<LocalPoi>();
         await _connection.CreateTableAsync<LocalPoiDetail>();
         await _connection.CreateTableAsync<LocalPoiAudio>();
+        await _connection.CreateTableAsync<LocalMapPack>();
         await _connection.CreateTableAsync<LocalCacheMetadata>();
 
         return _connection;

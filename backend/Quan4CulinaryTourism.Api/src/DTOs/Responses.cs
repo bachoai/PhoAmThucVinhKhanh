@@ -171,14 +171,44 @@ public class AnalyticsSummaryResponse
     public long PoiViewedCount { get; set; }
     public long AudioPlayedCount { get; set; }
     public long SearchExecutedCount { get; set; }
+    public double AverageListenDurationSeconds { get; set; }
     public List<TopPoiAnalyticsResponse> TopPoiViews { get; set; } = [];
     public List<TopPoiAnalyticsResponse> TopPoiAudioPlays { get; set; } = [];
+    public List<AnalyticsHeatmapPointResponse> HeatmapPoints { get; set; } = [];
+    public List<AnalyticsRouteTraceResponse> RecentRouteTraces { get; set; } = [];
 }
 
 public class TopPoiAnalyticsResponse
 {
     public string PoiId { get; set; } = string.Empty;
     public long Count { get; set; }
+}
+
+public class AnalyticsHeatmapPointResponse
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public long Count { get; set; }
+    public DateTime LastSeenAt { get; set; }
+}
+
+public class AnalyticsRoutePointResponse
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public bool IsBackground { get; set; }
+    public string Source { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}
+
+public class AnalyticsRouteTraceResponse
+{
+    public string AnonymousId { get; set; } = string.Empty;
+    public string? SessionId { get; set; }
+    public int PointCount { get; set; }
+    public DateTime StartedAt { get; set; }
+    public DateTime EndedAt { get; set; }
+    public List<AnalyticsRoutePointResponse> Points { get; set; } = [];
 }
 
 public class UsageHistoryEntryResponse
@@ -215,6 +245,25 @@ public class TourResponse
     public DateTime UpdatedAt { get; set; }
 }
 
+public class QrActivationResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string PoiId { get; set; } = string.Empty;
+    public string PoiName { get; set; } = string.Empty;
+    public string PoiAddress { get; set; } = string.Empty;
+    public string PoiWard { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string StopZone { get; set; } = string.Empty;
+    public string? StopAddress { get; set; }
+    public int SortOrder { get; set; }
+    public string? Description { get; set; }
+    public string ScanMode { get; set; } = "prefer_audio";
+    public string DeepLink { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
 public class MediaFileResponse
 {
     public string Id { get; set; } = string.Empty;
@@ -232,6 +281,7 @@ public class MapPackResponse
     public string Version { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string DownloadUrl { get; set; } = string.Empty;
+    public string EntryFile { get; set; } = "index.html";
     public string Sha256 { get; set; } = string.Empty;
     public long SizeBytes { get; set; }
     public bool IsActive { get; set; }
