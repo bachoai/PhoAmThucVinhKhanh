@@ -30,7 +30,7 @@ function App() {
         components: {
           Layout: {
             bodyBg: 'transparent',
-            siderBg: theme === 'dark' ? '#0b1220' : '#101828',
+            siderBg: theme === 'dark' ? '#0b1220' : '#f8fafc',
             headerBg: theme === 'dark' ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255, 255, 255, 0.78)',
           },
           Table: {

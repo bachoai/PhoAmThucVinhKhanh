@@ -38,6 +38,7 @@ import { poiApi } from './api/poiApi';
 import { qrApi } from './api/qrApi';
 import { tourApi } from './api/tourApi';
 import { audioApi } from './api/audioApi';
+import { routeApi } from './api/routeApi';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { PoiCard } from './components/common/PoiCard';
 import { AudioPlayer } from './components/common/AudioPlayer';
@@ -591,13 +592,13 @@ function Detail() {
           </div>
 
           <div className="mt-5 flex gap-3">
-            <a className="btn-primary" target="_blank" rel="noreferrer" href={mapUrl}>
+            <Link className="btn-primary" to={`/map?poi=${poi.id}`}>
               <Navigation size={17} />
               {ui.detail.direction}
-            </a>
-            <Link className="btn-secondary" to={`/map?poi=${poi.id}`}>
-              {ui.detail.viewMap}
             </Link>
+            <a className="btn-secondary" target="_blank" rel="noreferrer" href={mapUrl}>
+              Google Maps
+            </a>
           </div>
         </div>
       </div>
@@ -728,36 +729,214 @@ function Nearby() {
 }
 
 function MapPage() {
-  const { lang } = useAppStore();
-  const { data: pois = [], isLoading } = useQuery({
+  const { lang, location, setLocation } = useAppStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [geoError, setGeoError] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
+  const selectedPoiId = searchParams.get('poi') || '';
+  const { data: pois = [], isLoading, isError } = useQuery({
     queryKey: ['map-pois', lang],
     queryFn: () => poiApi.list({ lang }),
   });
+  const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
+  const routeQuery = useQuery({
+    queryKey: ['map-route', selectedPoiId, location?.lat, location?.lng],
+    queryFn: () =>
+      routeApi.between(
+        { lat: location!.lat, lng: location!.lng },
+        { lat: selectedPoi!.latitude, lng: selectedPoi!.longitude },
+      ),
+    enabled: Boolean(selectedPoi && location),
+    staleTime: 30000,
+    retry: 1,
+  });
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setGeoError('Trinh duyet nay khong ho tro GPS.');
+      return;
+    }
+
+    const syncLocation = (position: GeolocationPosition) => {
+      setLocation({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      });
+      setGeoError('');
+      setIsLocating(false);
+    };
+
+    const showError = () => {
+      setGeoError('Khong lay duoc vi tri hien tai. Hay bat GPS va thu lai.');
+      setIsLocating(false);
+    };
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(syncLocation, showError, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 15000,
+    });
+
+    const watchId = navigator.geolocation.watchPosition(syncLocation, () => undefined, {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 15000,
+    });
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [setLocation]);
+
+  useEffect(() => {
+    if (!selectedPoiId || selectedPoi || !pois.length) {
+      return;
+    }
+
+    const next = new URLSearchParams(searchParams);
+    next.delete('poi');
+    setSearchParams(next, { replace: true });
+  }, [pois, searchParams, selectedPoi, selectedPoiId, setSearchParams]);
+
+  const focusPoi = (poiId: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('poi', poiId);
+    setSearchParams(next, { replace: true });
+  };
+
+  const clearFocusPoi = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('poi');
+    setSearchParams(next, { replace: true });
+  };
+
+  const refreshLocation = () => {
+    if (!navigator.geolocation) {
+      setGeoError('Trinh duyet nay khong ho tro GPS.');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setGeoError('');
+        setIsLocating(false);
+      },
+      () => {
+        setGeoError('Khong lay duoc vi tri hien tai. Hay bat GPS va thu lai.');
+        setIsLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      },
+    );
+  };
+
+  const durationText = routeQuery.data
+    ? routeQuery.data.durationSeconds >= 3600
+      ? `${Math.floor(routeQuery.data.durationSeconds / 3600)}h ${Math.round((routeQuery.data.durationSeconds % 3600) / 60)}m`
+      : `${Math.max(1, Math.round(routeQuery.data.durationSeconds / 60))} phut`
+    : null;
 
   return (
     <section className="shell py-12">
       <p className="section-kicker">DINH VI HUONG VI</p>
       <h1 className="mt-2 text-4xl font-bold">Ban do am thuc</h1>
-      <p className="mt-2 text-slate-500">Chon marker hoac dia diem de xem chi tiet va chi duong.</p>
+      <p className="mt-2 text-slate-500">Lay vi tri that cua ban, chon mot POI va xem duong di ngay tren ban do.</p>
+
+      <div className="mt-6 grid gap-4 rounded-[2rem] bg-white p-5 shadow-soft dark:bg-slate-900 md:grid-cols-[1.2fr_.8fr_auto] md:items-center">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-coral">GPS thoi gian thuc</p>
+          <p className="mt-2 text-sm text-slate-500">
+            {location
+              ? `Vi tri hien tai: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`
+              : isLocating
+                ? 'Dang lay vi tri hien tai cua ban...'
+                : 'Chua lay duoc vi tri. Bam nut ben phai de bat dinh vi.'}
+          </p>
+          {geoError ? <p className="mt-2 text-sm text-rose-600">{geoError}</p> : null}
+        </div>
+        <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+          {selectedPoi ? (
+            <>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal">POI dang chon</p>
+              <p className="mt-2 text-lg font-bold">{selectedPoi.name}</p>
+              <p className="mt-1 text-sm text-slate-500">{selectedPoi.address}</p>
+              {routeQuery.data ? (
+                <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                  <span className="pill border-teal text-teal">{distance(routeQuery.data.distanceMeters)}</span>
+                  <span className="pill">{durationText}</span>
+                </div>
+              ) : routeQuery.isLoading ? (
+                <p className="mt-2 text-sm text-slate-500">Dang tim duong di tren mang luoi duong pho...</p>
+              ) : routeQuery.isError ? (
+                <p className="mt-2 text-sm text-rose-600">{(routeQuery.error as Error).message}</p>
+              ) : location ? (
+                <p className="mt-2 text-sm text-slate-500">Dang san sang chi duong ngay khi co route.</p>
+              ) : (
+                <p className="mt-2 text-sm text-slate-500">Can vi tri that cua ban de ve duong di.</p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal">Chua chon diem den</p>
+              <p className="mt-2 text-sm text-slate-500">Hay bam vao marker hoac mot dong trong danh sach de xem route va so km.</p>
+            </>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2 md:justify-end">
+          <button type="button" className="btn-primary" onClick={refreshLocation} disabled={isLocating}>
+            <Navigation size={17} />
+            {isLocating ? 'Dang lay GPS' : 'Lay vi tri cua toi'}
+          </button>
+          {selectedPoi ? (
+            <button type="button" className="btn-secondary" onClick={clearFocusPoi}>
+              Bo chon diem
+            </button>
+          ) : null}
+        </div>
+      </div>
 
       <div className="mt-7 grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
-        <PoiMap pois={pois} />
+        <PoiMap
+          pois={pois}
+          userLocation={location}
+          selectedPoiId={selectedPoiId || undefined}
+          routeGeometry={routeQuery.data?.geometry}
+          onSelectPoi={focusPoi}
+        />
         <div className="max-h-[430px] space-y-3 overflow-y-auto pr-1">
           {isLoading ? (
             <Spinner />
+          ) : isError ? (
+            <ErrorBox />
           ) : (
             pois.map((poi) => (
-              <Link
+              <div
                 key={poi.id}
-                to={`/poi/${poi.id}`}
-                className="block rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-soft dark:bg-slate-900"
+                className={`rounded-2xl bg-white p-4 shadow-sm transition dark:bg-slate-900 ${selectedPoiId === poi.id ? 'ring-2 ring-teal' : 'hover:shadow-soft'}`}
               >
-                <p className="font-bold">{poi.name}</p>
-                <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
-                  <MapPin size={14} />
-                  {poi.address}
-                </p>
-              </Link>
+                <button type="button" className="block w-full text-left" onClick={() => focusPoi(poi.id)}>
+                  <p className="font-bold">{poi.name}</p>
+                  <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
+                    <MapPin size={14} />
+                    {poi.address}
+                  </p>
+                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" className="pill border-teal text-teal" onClick={() => focusPoi(poi.id)}>
+                    {selectedPoiId === poi.id ? 'Dang chi duong' : 'Chi duong tren map'}
+                  </button>
+                  <Link to={`/poi/${poi.id}`} className="pill">
+                    Xem chi tiet
+                  </Link>
+                </div>
+              </div>
             ))
           )}
         </div>

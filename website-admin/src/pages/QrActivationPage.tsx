@@ -445,8 +445,10 @@ export function QrActivationPage() {
           ]}
           expandable={{
             expandedRowRender: (record) => (
-              <Space align="start" size="large" wrap>
-                <QRCode value={record.deepLink} type="svg" />
+              <Space align="start" size="large" wrap className="qr-detail-preview">
+                <div className="qr-preview-code">
+                  <QRCode value={record.deepLink} type="svg" bgColor="#ffffff" />
+                </div>
                 <Space direction="vertical">
                   <Typography.Text strong>{record.deepLink}</Typography.Text>
                   <Typography.Text>{record.stopZone} · {record.title}</Typography.Text>
@@ -477,7 +479,7 @@ export function QrActivationPage() {
             >
               {groupedSelectedItems.map((group) => (
                 <div key={group.zone} className="qr-zone-block" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ borderBottom: '1px solid #dbe2ea', paddingBottom: 8 }}>
+                  <div className="qr-zone-header">
                     <Typography.Title level={5} style={{ margin: 0 }}>{group.zone}</Typography.Title>
                     <Typography.Text type="secondary">{group.records.length} QR</Typography.Text>
                   </div>
@@ -487,23 +489,20 @@ export function QrActivationPage() {
                         key={record.id}
                         className="qr-print-card"
                         style={{
-                          border: '1px solid #dbe2ea',
-                          borderRadius: 18,
                           padding: 16,
                           display: 'grid',
                           gridTemplateColumns: '120px 1fr',
                           gap: 16,
                           alignItems: 'center',
-                          background: '#fff',
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                          <QRCode value={record.deepLink} type="svg" size={112} />
+                        <div className="qr-preview-code" style={{ display: 'flex', justifyContent: 'center' }}>
+                          <QRCode value={record.deepLink} type="svg" size={112} bgColor="#ffffff" />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: '#2563eb' }}>{record.stopZone}</div>
-                          <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>{record.title}</div>
-                          <div style={{ fontSize: 13, color: '#475569' }}>{record.stopAddress || record.poiAddress || '--'}</div>
+                          <div className="qr-preview-zone-label">{record.stopZone}</div>
+                          <div className="qr-preview-title">{record.title}</div>
+                          <div className="qr-preview-meta" style={{ fontSize: 13 }}>{record.stopAddress || record.poiAddress || '--'}</div>
                           <div style={{ fontSize: 14 }}><strong>POI:</strong> {record.poiName}</div>
                           <div style={{ fontSize: 12, color: '#64748b' }}>{record.code} · {record.scanMode}</div>
                           <div style={{ fontSize: 11, color: '#64748b', wordBreak: 'break-all' }}>{record.deepLink}</div>
@@ -549,17 +548,8 @@ export function QrActivationPage() {
       >
         {previewingQr ? (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <div
-              ref={qrImageRef}
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                padding: 20,
-                borderRadius: 18,
-                background: 'linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(241,245,249,1) 100%)',
-              }}
-            >
-              <QRCode value={previewingQr.deepLink} type="svg" size={240} />
+            <div ref={qrImageRef} className="qr-preview-stage">
+              <QRCode value={previewingQr.deepLink} type="svg" size={240} bgColor="#ffffff" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <Typography.Text strong>{previewingQr.title}</Typography.Text>
