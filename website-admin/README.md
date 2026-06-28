@@ -16,10 +16,10 @@ Admin frontend cho `Quan4 Culinary Tourism System`.
 
 ## Environment
 
-Tạo `.env`:
+Tạo `.env` từ file mẫu:
 
-```env
-VITE_API_BASE_URL=http://localhost:5163
+```powershell
+Copy-Item .env.example .env
 ```
 
 `src/utils/media.ts` sẽ tự chuẩn hóa media URL:
@@ -30,8 +30,8 @@ VITE_API_BASE_URL=http://localhost:5163
 
 ## Run
 
-```bash
-npm install
+```powershell
+npm ci
 npm run dev
 ```
 
