@@ -145,7 +145,7 @@ public class PoiService
             ReviewCount = poi.ReviewCount,
             Priority = poi.Priority,
             MapUrl = poi.MapUrl,
-            TtsScript = string.IsNullOrWhiteSpace(localization?.TtsScript) ? poi.TtsScript : localization!.TtsScript,
+            TtsScript = ResolveNarrationScript(lang, poi.TtsScript, localization?.TtsScript),
             Latitude = poi.Location.Coordinates.Latitude,
             Longitude = poi.Location.Coordinates.Longitude,
             GeofenceRadiusMeters = poi.GeofenceRadiusMeters,
@@ -223,5 +223,15 @@ public class PoiService
         poi.Tags = request.Tags;
         poi.IsActive = request.IsActive;
         poi.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static string? ResolveNarrationScript(string? lang, string? baseScript, string? localizedScript)
+    {
+        if (string.Equals(lang, "vi", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(lang))
+        {
+            return string.IsNullOrWhiteSpace(localizedScript) ? baseScript : localizedScript;
+        }
+
+        return string.IsNullOrWhiteSpace(localizedScript) ? null : localizedScript;
     }
 }

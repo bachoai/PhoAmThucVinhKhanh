@@ -7,6 +7,7 @@ public class PoiAudio : BaseDocument
     public string AudioUrl { get; set; } = string.Empty;
     public string? VoiceName { get; set; }
     public string SourceType { get; set; } = "uploaded";
+    public string? NarrationSignature { get; set; }
     public string Status { get; set; } = SharedConstants.AudioPending;
     public double DurationSeconds { get; set; }
     public long FileSizeBytes { get; set; }

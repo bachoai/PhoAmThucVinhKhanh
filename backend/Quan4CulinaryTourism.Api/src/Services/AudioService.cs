@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Http;
+using System.Security.Cryptography;
+using System.Text;
 using Quan4CulinaryTourism.Api.Common;
 using Quan4CulinaryTourism.Api.DTOs;
 using Quan4CulinaryTourism.Api.Helpers;
@@ -41,11 +43,39 @@ public class AudioService
     public async Task<PoiAudioResponse?> GetPoiAudioAsync(string poiId, string? lang, CancellationToken cancellationToken = default)
     {
         var normalizedLang = NormalizeLanguage(lang);
+        var poi = await _poiRepository.GetByIdAsync(poiId, cancellationToken);
+        if (poi is null)
+        {
+            return null;
+        }
+
+        var localization = await _poiLocalizationRepository.GetByPoiAndLangAsync(poiId, normalizedLang, cancellationToken);
+        var narrationText = ResolveNarrationText(normalizedLang, poi, localization);
+        var narrationSignature = ComputeNarrationSignature(normalizedLang, narrationText);
         var audio = await _poiAudioRepository.GetByPoiAndLangAsync(poiId, normalizedLang, cancellationToken);
+
+        if (ShouldRegenerateGeneratedAudio(audio, narrationSignature))
+        {
+            var regenerated = await GenerateNarrationAudioAsync(
+                poi,
+                normalizedLang,
+                narrationText,
+                narrationSignature,
+                cancellationToken);
+            if (regenerated is not null)
+            {
+                return regenerated;
+            }
+        }
 
         if (audio is null)
         {
-            var generated = await GenerateNarrationAudioAsync(poiId, normalizedLang, cancellationToken);
+            var generated = await GenerateNarrationAudioAsync(
+                poi,
+                normalizedLang,
+                narrationText,
+                narrationSignature,
+                cancellationToken);
             if (generated is not null)
             {
                 return generated;
@@ -135,19 +165,15 @@ public class AudioService
         FileSizeBytes = audio.FileSizeBytes
     };
 
-    private async Task<PoiAudioResponse?> GenerateNarrationAudioAsync(string poiId, string lang, CancellationToken cancellationToken)
+    private async Task<PoiAudioResponse?> GenerateNarrationAudioAsync(
+        Poi poi,
+        string lang,
+        string? narrationText,
+        string? narrationSignature,
+        CancellationToken cancellationToken)
     {
         try
         {
-            var poi = await _poiRepository.GetByIdAsync(poiId, cancellationToken);
-            if (poi is null)
-            {
-                return null;
-            }
-
-            var localization = await _poiLocalizationRepository.GetByPoiAndLangAsync(poiId, lang, cancellationToken);
-            var narrationText = ResolveNarrationText(lang, poi, localization);
-
             if (string.IsNullOrWhiteSpace(narrationText))
             {
                 return null;
@@ -166,6 +192,7 @@ public class AudioService
                 AudioUrl = generated.PublicUrl,
                 VoiceName = generated.VoiceName,
                 SourceType = "python_tts",
+                NarrationSignature = narrationSignature,
                 Status = SharedConstants.AudioDone,
                 FileSizeBytes = generated.FileSizeBytes
             };
@@ -177,7 +204,7 @@ public class AudioService
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Unable to auto-generate narration audio for POI {PoiId}", poiId);
+            _logger.LogError(exception, "Unable to auto-generate narration audio for POI {PoiId}", poi.Id);
             return null;
         }
     }
@@ -205,5 +232,27 @@ public class AudioService
         return FirstNonEmpty(
             localization?.TtsScript,
             localization?.Description);
+    }
+
+    private static bool ShouldRegenerateGeneratedAudio(PoiAudio? audio, string? narrationSignature)
+    {
+        if (audio is null || !string.Equals(audio.SourceType, "python_tts", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return !string.Equals(audio.NarrationSignature, narrationSignature, StringComparison.Ordinal);
+    }
+
+    private static string? ComputeNarrationSignature(string lang, string? narrationText)
+    {
+        if (string.IsNullOrWhiteSpace(narrationText))
+        {
+            return null;
+        }
+
+        var payload = $"{lang}:{narrationText.Trim()}";
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
+        return Convert.ToHexString(bytes);
     }
 }
