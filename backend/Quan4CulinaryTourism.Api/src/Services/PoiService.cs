@@ -38,6 +38,16 @@ public class PoiService
 
     public async Task<List<NearbyPoiResponse>> NearbyAsync(double lat, double lng, int radius, int limit, string? lang, CancellationToken cancellationToken = default)
     {
+        if (lat is < -90 or > 90)
+        {
+            throw new ApiException("Latitude phải nằm trong khoảng -90 đến 90.");
+        }
+
+        if (lng is < -180 or > 180)
+        {
+            throw new ApiException("Longitude phải nằm trong khoảng -180 đến 180.");
+        }
+
         if (radius is <= 0 or > 10000)
         {
             throw new ApiException("Radius phải từ 1 đến 10000 mét.");

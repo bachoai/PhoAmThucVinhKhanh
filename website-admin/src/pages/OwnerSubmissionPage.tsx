@@ -63,8 +63,19 @@ export function OwnerSubmissionPage() {
               title: t('actions'),
               render: (_, record) => (
                 <Space>
-                  <Button onClick={() => setDetailId(record.id)}>Chi tiết</Button>
-                  <Button type="primary" onClick={() => Modal.confirm({ title: 'Approve submission?', content: record.poiName, onOk: () => approveMutation.mutate(record.id) })}>{t('approve')}</Button>
+                  <Button onClick={() => setDetailId(record.id)}>{t('details')}</Button>
+                  <Button
+                    type="primary"
+                    onClick={() =>
+                      Modal.confirm({
+                        title: t('approve_submission_confirm'),
+                        content: record.poiName,
+                        onOk: () => approveMutation.mutate(record.id),
+                      })
+                    }
+                  >
+                    {t('approve')}
+                  </Button>
                   <Button danger onClick={() => setRejectId(record.id)}>{t('reject')}</Button>
                 </Space>
               ),
@@ -75,13 +86,13 @@ export function OwnerSubmissionPage() {
       <Modal open={Boolean(rejectId)} onCancel={() => setRejectId(null)} onOk={() => rejectId && note.trim() && rejectMutation.mutate({ id: rejectId, adminNote: note.trim() })} okButtonProps={{ danger: true, loading: rejectMutation.isPending, disabled: !note.trim() }} title={t('reject')}>
         <Input.TextArea rows={4} value={note} onChange={(event) => setNote(event.target.value)} placeholder={t('rejection_reason')} />
       </Modal>
-      <Modal open={Boolean(selectedRecord)} onCancel={() => setDetailId(null)} footer={null} title="Submission detail">
+      <Modal open={Boolean(selectedRecord)} onCancel={() => setDetailId(null)} footer={null} title={t('submission_details')}>
         {selectedRecord ? (
           <Descriptions column={1} size="small">
             <Descriptions.Item label="POI">{selectedRecord.poiName}</Descriptions.Item>
             <Descriptions.Item label="POI ID">{selectedRecord.poiId ?? '--'}</Descriptions.Item>
-            <Descriptions.Item label="Type"><StatusBadge value={selectedRecord.submissionType} /></Descriptions.Item>
-            <Descriptions.Item label="Status"><StatusBadge value={selectedRecord.status} /></Descriptions.Item>
+            <Descriptions.Item label={t('type')}><StatusBadge value={selectedRecord.submissionType} /></Descriptions.Item>
+            <Descriptions.Item label={t('status')}><StatusBadge value={selectedRecord.status} /></Descriptions.Item>
             <Descriptions.Item label={t('priority')}>{selectedRecord.priority}</Descriptions.Item>
             <Descriptions.Item label={t('map_url')}>{selectedRecord.mapUrl ?? '--'}</Descriptions.Item>
             <Descriptions.Item label={t('tts_script')}>{selectedRecord.ttsScript ?? '--'}</Descriptions.Item>
@@ -89,7 +100,7 @@ export function OwnerSubmissionPage() {
             <Descriptions.Item label={t('auto_narration_enabled')}>
               <StatusBadge value={selectedRecord.autoNarrationEnabled} trueLabel={t('yes')} falseLabel={t('no')} />
             </Descriptions.Item>
-            <Descriptions.Item label="Admin note">{selectedRecord.adminNote ?? '--'}</Descriptions.Item>
+            <Descriptions.Item label={t('admin_note')}>{selectedRecord.adminNote ?? '--'}</Descriptions.Item>
           </Descriptions>
         ) : null}
       </Modal>

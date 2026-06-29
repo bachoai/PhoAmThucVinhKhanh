@@ -33,6 +33,10 @@ function popupContent(poi: Poi, onSelectPoi?: (poiId: string) => void) {
   address.className = 'text-xs text-slate-500';
   address.textContent = poi.address;
 
+  const price = document.createElement('div');
+  price.className = 'text-xs font-semibold text-coral';
+  price.textContent = poi.priceRange;
+
   const actions = document.createElement('div');
   actions.className = 'mt-2 flex gap-2';
 
@@ -51,7 +55,7 @@ function popupContent(poi: Poi, onSelectPoi?: (poiId: string) => void) {
   detailLink.className = 'rounded-full border border-slate-300 px-3 py-1 text-xs font-bold text-slate-700';
   actions.append(detailLink);
 
-  root.append(title, address, actions);
+  root.append(title, address, price, actions);
   return root;
 }
 

@@ -11,7 +11,7 @@ public class Poi : BaseDocument
     public string Address { get; set; } = string.Empty;
     public string Ward { get; set; } = string.Empty;
     public string District { get; set; } = "Quận 4";
-    public string City { get; set; } = "TP.HCM";
+    public string City { get; set; } = "TP. Hồ Chí Minh";
     public string PriceRange { get; set; } = "$";
     public double Rating { get; set; }
     public int ReviewCount { get; set; }

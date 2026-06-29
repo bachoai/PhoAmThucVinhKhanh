@@ -67,8 +67,19 @@ export function OwnerRegistrationPage() {
               title: t('actions'),
               render: (_, record) => (
                 <Space>
-                  <Button onClick={() => setDetailId(record.id)}>Chi tiết</Button>
-                  <Button type="primary" onClick={() => Modal.confirm({ title: 'Approve owner registration?', content: record.businessName, onOk: () => approveMutation.mutate(record.id) })}>{t('approve')}</Button>
+                  <Button onClick={() => setDetailId(record.id)}>{t('details')}</Button>
+                  <Button
+                    type="primary"
+                    onClick={() =>
+                      Modal.confirm({
+                        title: t('approve_owner_registration_confirm'),
+                        content: record.businessName,
+                        onOk: () => approveMutation.mutate(record.id),
+                      })
+                    }
+                  >
+                    {t('approve')}
+                  </Button>
                   <Button danger onClick={() => setRejectId(record.id)}>{t('reject')}</Button>
                 </Space>
               ),
@@ -79,15 +90,15 @@ export function OwnerRegistrationPage() {
       <Modal open={Boolean(rejectId)} onCancel={() => setRejectId(null)} onOk={() => rejectId && rejectNote.trim() && rejectMutation.mutate({ id: rejectId, adminNote: rejectNote.trim() })} okButtonProps={{ danger: true, loading: rejectMutation.isPending, disabled: !rejectNote.trim() }} title={t('reject')}>
         <Input.TextArea rows={4} value={rejectNote} onChange={(event) => setRejectNote(event.target.value)} placeholder={t('rejection_reason')} />
       </Modal>
-      <Modal open={Boolean(selectedRecord)} onCancel={() => setDetailId(null)} footer={null} title="Owner registration detail">
+      <Modal open={Boolean(selectedRecord)} onCancel={() => setDetailId(null)} footer={null} title={t('owner_registration_details')}>
         {selectedRecord ? (
           <Descriptions column={1} size="small">
-            <Descriptions.Item label="Business">{selectedRecord.businessName}</Descriptions.Item>
-            <Descriptions.Item label="Address">{selectedRecord.businessAddress}</Descriptions.Item>
-            <Descriptions.Item label="Phone">{selectedRecord.phoneNumber}</Descriptions.Item>
-            <Descriptions.Item label="Description">{selectedRecord.description ?? '--'}</Descriptions.Item>
-            <Descriptions.Item label="Status"><StatusBadge value={selectedRecord.status} /></Descriptions.Item>
-            <Descriptions.Item label="Admin note">{selectedRecord.adminNote ?? '--'}</Descriptions.Item>
+            <Descriptions.Item label={t('business')}>{selectedRecord.businessName}</Descriptions.Item>
+            <Descriptions.Item label={t('address')}>{selectedRecord.businessAddress}</Descriptions.Item>
+            <Descriptions.Item label={t('phone')}>{selectedRecord.phoneNumber}</Descriptions.Item>
+            <Descriptions.Item label={t('description')}>{selectedRecord.description ?? '--'}</Descriptions.Item>
+            <Descriptions.Item label={t('status')}><StatusBadge value={selectedRecord.status} /></Descriptions.Item>
+            <Descriptions.Item label={t('admin_note')}>{selectedRecord.adminNote ?? '--'}</Descriptions.Item>
           </Descriptions>
         ) : null}
       </Modal>

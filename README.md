@@ -2,38 +2,40 @@
 
 Monorepo gồm:
 
-- API ASP.NET Core + MongoDB
-- website admin React/Vite
-- website public React/Vite
-- mobile app .NET MAUI
+- Backend API ASP.NET Core + MongoDB
+- Admin web React/Vite
+- Public web React/Vite
+- Mobile app .NET MAUI
 
-## Thư mục chính
+## Cấu trúc chính
 
 - `backend/Quan4CulinaryTourism.Api`: backend API
 - `website-admin`: trang quản trị
-- `website-user`: website cho du khách
+- `website-user`: website public cho du khách
 - `mobile/Quan4CulinaryTourism.Mobile`: ứng dụng mobile
+- `docs/API_CONTRACT.md`: hợp đồng API và các flow chính
+- `scripts/create-clean-zip.ps1`: tạo file zip sạch trước khi bàn giao/demo
 
-## Cổng và URL mặc định
+## Cổng mặc định khi chạy local
 
 | Thành phần | URL / kết nối |
 | --- | --- |
 | MongoDB | `mongodb://localhost:27017` |
-| API | `http://localhost:5163` |
-| Swagger (khi `dotnet run`) | `http://localhost:5163/swagger` |
+| API backend | `http://localhost:5163` |
+| Swagger | `http://localhost:5163/swagger` |
 | Admin web | `http://localhost:5173` |
 | Public web | `http://localhost:5174` |
 
-## Yêu cầu
+## Yêu cầu môi trường
 
 - Docker Desktop hoặc Docker Engine + Docker Compose
 - .NET SDK 10
 - Node.js 20+
 - .NET MAUI workload nếu cần chạy mobile
 
-## Cách chạy dễ nhất cho local
+## Chạy local
 
-Tất cả lệnh bên dưới được viết theo PowerShell và nên chạy từ repo root:
+Các lệnh dưới đây viết theo PowerShell và nên chạy từ repo root:
 
 ```powershell
 cd D:\bac\PhoAmThucVinhKhanh
@@ -45,9 +47,7 @@ cd D:\bac\PhoAmThucVinhKhanh
 docker compose up mongo -d
 ```
 
-Lệnh này chỉ dùng để bật MongoDB local. Không cần set biến môi trường trước nữa.
-
-### 2. API backend
+### 2. Backend API
 
 ```powershell
 cd backend\Quan4CulinaryTourism.Api
@@ -57,26 +57,20 @@ dotnet run
 
 Ghi chú:
 
-- `dotnet run` dùng profile `Development`, nên Swagger mở tại `http://localhost:5163/swagger`
-- backend đã có dev secret và tài khoản admin seed sẵn trong `appsettings.Development.json`
-- nếu database rỗng, backend sẽ seed role, admin, categories và dữ liệu demo
+- Swagger chỉ bật trong `Development`.
+- Backend tự load file `.env` trong thư mục backend nếu có.
+- `appsettings.Development.json` đã có cấu hình local để chạy nhanh.
+- Nếu database trống, backend sẽ seed role, admin, category và dữ liệu demo.
 
-Tài khoản admin local:
+Tài khoản admin local mặc định:
 
 - Email: `admin@quan4tourism.local`
 - Password: `Admin@123456`
 
-### 3. Website admin
-
-Chạy một lần để tạo file env:
+### 3. Admin web
 
 ```powershell
 Copy-Item website-admin\.env.example website-admin\.env
-```
-
-Sau đó:
-
-```powershell
 cd website-admin
 npm ci
 npm run dev
@@ -84,48 +78,18 @@ npm run dev
 
 Admin web chạy tại `http://localhost:5173`.
 
-### 4. Website public
-
-Chạy một lần để tạo file env:
+### 4. Public web
 
 ```powershell
 Copy-Item website-user\.env.example website-user\.env
-```
-
-Sau đó:
-
-```powershell
 cd website-user
 npm ci
 npm run dev
 ```
 
-Website public chạy tại `http://localhost:5174`.
+Public web chạy tại `http://localhost:5174`.
 
-## Chạy API bằng Docker
-
-Nếu muốn chạy cả MongoDB và API bằng Docker:
-
-```powershell
-Copy-Item .env.example .env
-docker compose up --build
-```
-
-File `.env.example` ở repo root cung cấp các biến cần thiết cho container API:
-
-- `JwtSettings__SecretKey`
-- `DefaultAdmin__Email`
-- `DefaultAdmin__Password`
-- `Cors__AllowedOrigins__0`
-- `Cors__AllowedOrigins__1`
-
-Lưu ý:
-
-- `docker compose up mongo -d` không cần file `.env`
-- `docker compose up --build` cần `.env` nếu bạn muốn API container khởi động thành công
-- API trong Docker đang chạy với `ASPNETCORE_ENVIRONMENT=Production`, nên không có Swagger
-
-## Mobile
+### 5. Mobile
 
 Build Windows:
 
@@ -141,18 +105,130 @@ cd mobile\Quan4CulinaryTourism.Mobile
 dotnet build -f net10.0-android
 ```
 
-Preset API trong mobile:
+API base URL nên dùng:
 
 - Windows: `http://localhost:5163`
 - Android Emulator: `http://10.0.2.2:5163`
-- Máy thật: nhập LAN IP của máy đang chạy backend, ví dụ `http://192.168.1.50:5163`
+- Máy thật: LAN IP của máy đang chạy backend, ví dụ `http://192.168.1.50:5163`
 
-## Lệnh kiểm tra
+## Chạy backend bằng Docker
 
-- API: `dotnet build backend/Quan4CulinaryTourism.Api/Quan4CulinaryTourism.Api.csproj`
-- Admin: `cd website-admin; npm run build`
-- Public web: `cd website-user; npm run build`
-- Mobile Windows: `cd mobile/Quan4CulinaryTourism.Mobile; dotnet build -f net10.0-windows10.0.19041.0`
+Nếu muốn chạy cả MongoDB và API trong Docker:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+Biến cần có trong `.env`:
+
+- `JwtSettings__SecretKey`
+- `DefaultAdmin__Email`
+- `DefaultAdmin__Password`
+- `Cors__AllowedOrigins__0`
+- `Cors__AllowedOrigins__1`
+
+Lưu ý:
+
+- `docker compose up mongo -d` không cần `.env`.
+- `docker compose up --build` cần `.env` để API container khởi động thành công.
+- API container chạy `Production`, nên không có Swagger.
+
+## Deploy tách backend/admin/public
+
+### Backend API
+
+- Deploy API riêng.
+- Cấu hình `JwtSettings__SecretKey` bằng secret thật, tối thiểu 32 ký tự.
+- Không để `DefaultAdmin__Password` rỗng trong production nếu vẫn bật seed admin.
+- Chỉ bật CORS cho đúng domain admin và public.
+- Không commit `.env`, secret, hoặc file upload demo.
+
+### Admin web
+
+- Deploy `website-admin` riêng, domain riêng.
+- Chỉ cấu hình `VITE_API_BASE_URL` trỏ tới domain API.
+- Không hardcode production API URL trong source.
+
+### Public web
+
+- Deploy `website-user` riêng, domain riêng.
+- Cấu hình:
+  - `VITE_API_BASE_URL`
+  - `VITE_MAPTILER_KEY`
+  - `VITE_OSRM_BASE_URL`
+  - `VITE_OSRM_PROFILE`
+- Backend `PublicSiteSettings:BaseUrl` phải trỏ đúng domain public để QR/deep link mở đúng trang khách.
+
+### CORS backend
+
+Backend phải thêm đúng domain của:
+
+- Admin web
+- Public web
+
+Ví dụ production:
+
+```env
+Cors__AllowedOrigins__0=https://admin.example.com
+Cors__AllowedOrigins__1=https://www.example.com
+```
+
+## Build kiểm tra
+
+### Backend
+
+```powershell
+dotnet build backend/Quan4CulinaryTourism.Api/Quan4CulinaryTourism.Api.csproj
+```
+
+### Admin web
+
+```powershell
+cd website-admin
+Remove-Item -Recurse -Force node_modules, dist -ErrorAction SilentlyContinue
+npm ci
+npm run build
+```
+
+### Public web
+
+```powershell
+cd website-user
+Remove-Item -Recurse -Force node_modules, dist -ErrorAction SilentlyContinue
+npm ci
+npm run build
+```
+
+## Tạo zip sạch trước khi bàn giao
+
+Script này tự loại trừ:
+
+- `.git/`
+- `.codegraph/`
+- `.codex/`
+- `.agents/`
+- `node_modules/`
+- `dist/`
+- `bin/`
+- `obj/`
+- `tmp/`
+- `backend/**/_build_verify*/`
+- `backend/Quan4CulinaryTourism.Api/wwwroot/uploads/`
+- `.env`
+- `.env.*` trừ `.env.example`
+
+Chạy:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\create-clean-zip.ps1
+```
+
+Hoặc chỉ định file đầu ra:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\create-clean-zip.ps1 -OutputPath .\release\PhoAmThucVinhKhanh-clean.zip
+```
 
 ## Tài liệu từng app
 

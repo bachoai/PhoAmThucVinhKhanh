@@ -1,4 +1,5 @@
 using MongoDB.Driver;
+using System.Text.RegularExpressions;
 using Quan4CulinaryTourism.Api.Database;
 using Quan4CulinaryTourism.Api.DTOs;
 using Quan4CulinaryTourism.Api.Models;
@@ -83,10 +84,11 @@ public class PoiRepository
 
         if (!string.IsNullOrWhiteSpace(request.Keyword))
         {
+            var escapedKeyword = Regex.Escape(request.Keyword.Trim());
             filter &= Builders<Poi>.Filter.Or(
-                Builders<Poi>.Filter.Regex(x => x.Name, new MongoDB.Bson.BsonRegularExpression(request.Keyword, "i")),
-                Builders<Poi>.Filter.Regex(x => x.Description, new MongoDB.Bson.BsonRegularExpression(request.Keyword, "i")),
-                Builders<Poi>.Filter.Regex(x => x.Address, new MongoDB.Bson.BsonRegularExpression(request.Keyword, "i")));
+                Builders<Poi>.Filter.Regex(x => x.Name, new MongoDB.Bson.BsonRegularExpression(escapedKeyword, "i")),
+                Builders<Poi>.Filter.Regex(x => x.Description, new MongoDB.Bson.BsonRegularExpression(escapedKeyword, "i")),
+                Builders<Poi>.Filter.Regex(x => x.Address, new MongoDB.Bson.BsonRegularExpression(escapedKeyword, "i")));
         }
 
         if (!string.IsNullOrWhiteSpace(request.CategoryId))

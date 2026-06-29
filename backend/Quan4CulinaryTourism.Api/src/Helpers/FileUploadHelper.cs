@@ -52,8 +52,17 @@ public class FileUploadHelper
         return publicUrl;
     }
 
-    private static void Validate(IFormFile file, IReadOnlyCollection<string> allowedExtensions, IReadOnlyCollection<string> allowedMimeTypes, int maxSizeMb)
+    private static void Validate(
+        IFormFile file,
+        IReadOnlyCollection<string> allowedExtensions,
+        IReadOnlyCollection<string> allowedMimeTypes,
+        int maxSizeMb)
     {
+        if (file.Length <= 0)
+        {
+            throw new ApiException("File tải lên đang rỗng.");
+        }
+
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!allowedExtensions.Contains(extension))
         {

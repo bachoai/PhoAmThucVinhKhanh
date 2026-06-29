@@ -45,5 +45,5 @@ public class TextToSpeechSettings
 
 public class PublicSiteSettings
 {
-    public string BaseUrl { get; set; } = "http://localhost:5173";
+    public string BaseUrl { get; set; } = "http://localhost:5174";
 }

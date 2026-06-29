@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giải Thích Hệ Thống Map - Quan4 Culinary Tourism</title>
+    <style>
+      :root {
+        --bg: #f4efe6;
+        --surface: rgba(255, 252, 247, 0.94);
+        --surface-strong: #fffaf2;
+        --text: #1f2937;
+        --muted: #5b6578;
+        --border: rgba(148, 163, 184, 0.28);
+        --primary: #d97706;
+        --secondary: #0f766e;
+        --accent: #1d4ed8;
+        --shadow: 0 24px 50px rgba(15, 23, 42, 0.1);
+        --radius: 24px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: var(--text);
+        line-height: 1.65;
+        background:
+          radial-gradient(circle at top left, rgba(217, 119, 6, 0.18), transparent 28%),
+          radial-gradient(circle at top right, rgba(15, 118, 110, 0.14), transparent 24%),
+          linear-gradient(180deg, #fcf7ef 0%, #f2f6fb 100%);
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      .page {
+        width: min(1240px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 56px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 38px;
+        border-radius: 32px;
+        color: #fff;
+        background:
+          radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.16), transparent 20%),
+          linear-gradient(140deg, #111827 0%, #174e63 52%, #b45309 100%);
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -80px -80px auto;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(32px, 5vw, 54px);
+        line-height: 1.08;
+      }
+
+      .hero p {
+        max-width: 900px;
+        margin: 14px 0 0;
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 24px;
+        margin-top: 24px;
+      }
+
+      .toc,
+      .section,
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        backdrop-filter: blur(12px);
+        box-shadow: var(--shadow);
+      }
+
+      .toc {
+        position: sticky;
+        top: 16px;
+        align-self: start;
+        padding: 22px;
+      }
+
+      .toc h2 {
+        margin: 0 0 12px;
+        font-size: 19px;
+      }
+
+      .toc ol {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .toc li + li {
+        margin-top: 8px;
+      }
+
+      .content {
+        display: grid;
+        gap: 24px;
+      }
+
+      .section {
+        padding: 28px;
+      }
+
+      .section h2 {
+        margin: 0 0 16px;
+        font-size: 30px;
+      }
+
+      .section h3 {
+        margin: 24px 0 10px;
+        font-size: 20px;
+      }
+
+      .section p,
+      .section li,
+      .section td {
+        color: var(--muted);
+      }
+
+      .kicker {
+        margin: 0 0 8px;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--primary);
+        font-weight: 800;
+      }
+
+      .grid-2,
+      .grid-3 {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .card h4 {
+        margin: 0 0 8px;
+        font-size: 17px;
+      }
+
+      .flow {
+        display: grid;
+        gap: 14px;
+      }
+
+      .flow-step {
+        padding: 16px 18px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 250, 252, 0.92));
+      }
+
+      .flow-step strong {
+        color: var(--text);
+      }
+
+      .note {
+        padding: 16px 18px;
+        border-left: 4px solid var(--secondary);
+        border-radius: 18px;
+        background: rgba(15, 118, 110, 0.08);
+      }
+
+      .warning {
+        border-left-color: var(--primary);
+        background: rgba(217, 119, 6, 0.1);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 18px;
+      }
+
+      th,
+      td {
+        padding: 12px 14px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        background: rgba(255, 255, 255, 0.76);
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      code {
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: #e8eef8;
+        color: #173b69;
+        font-size: 0.96em;
+      }
+
+      .stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .stack-item {
+        padding: 14px 16px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: var(--surface-strong);
+      }
+
+      .footer {
+        margin-top: 12px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 1080px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .toc {
+          position: static;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .hero,
+        .section {
+          padding: 22px;
+        }
+
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <p class="kicker" style="color: rgba(255, 255, 255, 0.74)">Tài liệu chuyên sâu phần map</p>
+        <h1>Giải thích chi tiết hệ thống bản đồ và chỉ đường</h1>
+        <p>
+          File này giải thích riêng phần map trong repo theo đúng code hiện tại:
+          route nào dùng map, API nào cấp dữ liệu, component nào render bản đồ,
+          cách GPS được lấy, cách route được vẽ, nearby hoạt động ra sao, và phần
+          offline pack liên quan thế nào tới admin và mobile.
+        </p>
+        <div class="hero-meta">
+          <span class="pill">Public web: <code>/map</code>, <code>/nearby</code></span>
+          <span class="pill">Map renderer: MapLibre + MapTiler/OSM</span>
+          <span class="pill">Routing: OSRM</span>
+          <span class="pill">Backend: nearby + map pack manifest</span>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="toc">
+          <h2>Mục lục</h2>
+          <ol>
+            <li><a href="#tong-quan">Map đang giải quyết bài toán gì</a></li>
+            <li><a href="#chuc-nang">Các chức năng liên quan đến map</a></li>
+            <li><a href="#luong-map-page">Luồng hoạt động của trang <code>/map</code></a></li>
+            <li><a href="#luong-nearby">Luồng hoạt động của trang <code>/nearby</code></a></li>
+            <li><a href="#poimap">PoiMap chạy như thế nào</a></li>
+            <li><a href="#backend">Backend map và nearby</a></li>
+            <li><a href="#offline-pack">Offline pack, admin và mobile</a></li>
+            <li><a href="#env">Biến môi trường và điểm dễ lỗi</a></li>
+            <li><a href="#doc-code">Nên đọc code theo thứ tự nào</a></li>
+          </ol>
+        </aside>
+
+        <main class="content">
+          <section class="section" id="tong-quan">
+            <h2>Map đang giải quyết bài toán gì</h2>
+            <p>
+              Trong repo này, phần map không chỉ để “ghim điểm lên bản đồ”.
+              Nó phục vụ 4 việc chính: cho người dùng xem tất cả POI trên bản đồ,
+              tìm quán gần vị trí hiện tại, chọn một POI để vẽ đường đi, và cấp dữ
+              liệu offline pack cho các màn liên quan tới bản đồ.
+            </p>
+
+            <div class="grid-2">
+              <div class="card">
+                <p class="kicker">Bề mặt người dùng</p>
+                <h4>Map là tính năng trải nghiệm</h4>
+                <p>
+                  Người dùng public web tương tác trực tiếp với map ở
+                  <code>/map</code> và gián tiếp qua <code>/nearby</code>,
+                  <code>/poi/:id</code>, Google Maps link và QR flow.
+                </p>
+              </div>
+              <div class="card">
+                <p class="kicker">Bề mặt hệ thống</p>
+                <h4>Map là một chuỗi nhiều lớp</h4>
+                <p>
+                  Một thao tác “chỉ đường” thực tế đi qua router của React,
+                  geolocation của browser, store dùng chung, API lấy POI, API route
+                  OSRM, rồi mới đến <code>PoiMap</code> để render marker và line.
+                </p>
+              </div>
+            </div>
+
+            <div class="note" style="margin-top: 18px">
+              <strong>Tư duy đúng về phần map:</strong> nearby và chỉ đường là hai
+              flow khác nhau. <code>/nearby</code> hỏi backend “POI nào gần tôi”,
+              còn <code>/map</code> hỏi dịch vụ route “đi từ tôi đến POI này như thế nào”.
+            </div>
+          </section>
+
+          <section class="section" id="chuc-nang">
+            <h2>Các chức năng liên quan đến map</h2>
+
+            <div class="grid-3">
+              <div class="card">
+                <h4>1. Xem toàn bộ POI trên bản đồ</h4>
+                <p>
+                  Trang <code>/map</code> tải toàn bộ POI public bằng
+                  <code>poiApi.list</code>, sau đó lọc theo category hoặc mức giá,
+                  rồi đưa danh sách đó vào <code>PoiMap</code>.
+                </p>
+              </div>
+              <div class="card">
+                <h4>2. Lấy vị trí hiện tại</h4>
+                <p>
+                  Browser dùng <code>navigator.geolocation</code> để lấy GPS thật,
+                  rồi lưu vào <code>useAppStore().location</code> để cả trang có thể
+                  dùng chung.
+                </p>
+              </div>
+              <div class="card">
+                <h4>3. Chọn POI và vẽ đường đi</h4>
+                <p>
+                  Khi người dùng chọn một POI, trang <code>/map</code> gọi
+                  <code>routeApi.between</code> tới OSRM để lấy geometry,
+                  distance và duration rồi vẽ line trên bản đồ.
+                </p>
+              </div>
+              <div class="card">
+                <h4>4. Tìm POI gần tôi</h4>
+                <p>
+                  Trang <code>/nearby</code> gửi tọa độ hiện tại + bán kính lên
+                  backend endpoint <code>/api/v1/poi/nearby</code>. Backend tự tính
+                  khoảng cách từng POI và trả kết quả đã sắp xếp gần nhất trước.
+                </p>
+              </div>
+              <div class="card">
+                <h4>5. Mở hướng đi ngoài hệ thống</h4>
+                <p>
+                  Trong <code>PoiDetailPage</code>, nút Google Maps mở thẳng link
+                  <code>https://www.google.com/maps/dir/?api=1&amp;destination=lat,lng</code>
+                  để người dùng tiếp tục điều hướng ở app ngoài.
+                </p>
+              </div>
+              <div class="card">
+                <h4>6. Xem thông tin offline pack</h4>
+                <p>
+                  Public web và admin đều gọi <code>/api/v1/maps/pack-manifest</code>
+                  để hiển thị manifest gói bản đồ hiện tại. Mobile dùng cùng ý tưởng
+                  này để tải pack phục vụ offline map.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" id="luong-map-page">
+            <h2>Luồng hoạt động của trang <code>/map</code></h2>
+            <p>
+              Đây là flow đầy đủ nhất của phần map vì nó kết hợp dữ liệu POI, GPS,
+              filter, chọn điểm đến và chỉ đường.
+            </p>
+
+            <div class="flow">
+              <div class="flow-step">
+                <strong>Bước 1:</strong> <code>website-user/src/routes/AppRoutes.tsx</code>
+                mount route <code>/map</code> và lazy-load <code>MapPage</code>.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 2:</strong> <code>MapPage.tsx</code> đọc query string
+                <code>category</code>, <code>price</code>, <code>poi</code> bằng
+                <code>useSearchParams</code> để biết đang lọc gì và đang focus POI nào.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 3:</strong> Trang gọi <code>poiApi.list({ lang })</code>
+                để lấy toàn bộ POI public và tự lọc ở frontend theo category/price.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 4:</strong> Trang gọi geolocation của browser một lần
+                bằng <code>getCurrentPosition</code> để lấy GPS ngay, sau đó giữ
+                <code>watchPosition</code> để cập nhật vị trí mới nếu người dùng di chuyển.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 5:</strong> Khi đã có <code>selectedPoi</code> và
+                <code>location</code>, React Query bật <code>routeApi.between</code>
+                để gọi OSRM lấy tuyến đường.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 6:</strong> <code>PoiMap</code> nhận 4 nhóm dữ liệu:
+                danh sách POI, vị trí user, POI đang chọn và route geometry. Từ đó
+                component tự render marker, popup và polyline.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 7:</strong> Cột bên phải của <code>MapPage</code>
+                hiển thị danh sách POI, còn khối summary phía trên hiển thị
+                khoảng cách và thời gian nếu route đã có.
+              </div>
+            </div>
+
+            <h3>MapPage giữ state gì</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>State</th>
+                  <th>Nguồn</th>
+                  <th>Ý nghĩa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>location</code></td>
+                  <td><code>useAppStore</code></td>
+                  <td>Vị trí GPS hiện tại dùng cho route và marker user.</td>
+                </tr>
+                <tr>
+                  <td><code>categoryId</code>, <code>priceRange</code></td>
+                  <td>Query string + local state</td>
+                  <td>Điều khiển bộ lọc danh sách POI và marker hiển thị trên map.</td>
+                </tr>
+                <tr>
+                  <td><code>selectedPoiId</code></td>
+                  <td>Query string <code>poi</code></td>
+                  <td>Điểm đang được focus để vẽ route và tô đậm marker.</td>
+                </tr>
+                <tr>
+                  <td><code>routeQuery.data</code></td>
+                  <td>OSRM</td>
+                  <td>Geometry tuyến đường, khoảng cách mét và thời gian giây.</td>
+                </tr>
+                <tr>
+                  <td><code>mapPackQuery.data</code></td>
+                  <td>Backend <code>/maps/pack-manifest</code></td>
+                  <td>Chỉ để báo thông tin offline pack hiện có, không trực tiếp render map web.</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="note warning" style="margin-top: 18px">
+              <strong>Lưu ý quan trọng:</strong> route của <code>/map</code> không
+              đi qua backend repo để tính đường. Backend chỉ cấp dữ liệu POI và
+              manifest offline pack. Phần “đường đi” được tính trực tiếp từ frontend
+              sang OSRM bằng <code>routeApi.ts</code>.
+            </div>
+          </section>
+
+          <section class="section" id="luong-nearby">
+            <h2>Luồng hoạt động của trang <code>/nearby</code></h2>
+            <p>
+              Trang nearby nhẹ hơn trang map: nó không vẽ bản đồ, nhưng vẫn là một
+              chức năng thuộc nhóm map/location vì nó phụ thuộc vào GPS và khoảng cách.
+            </p>
+
+            <div class="flow">
+              <div class="flow-step">
+                <strong>Bước 1:</strong> Người dùng bấm “Lấy vị trí hiện tại” hoặc
+                chọn fallback “Dùng vị trí Quận 4”.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 2:</strong> <code>NearbyPage.tsx</code> lưu tọa độ vào
+                local state <code>coords</code> và đồng thời gọi
+                <code>setLocation</code> vào app store.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 3:</strong> Khi <code>coords</code> hợp lệ, React Query
+                bật <code>poiApi.nearby</code> tới endpoint
+                <code>/api/v1/poi/nearby</code>.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 4:</strong> Backend tính khoảng cách tất cả POI, lọc theo
+                bán kính, sắp xếp tăng dần theo <code>distanceMeters</code> và trả về
+                tối đa số lượng yêu cầu.
+              </div>
+              <div class="flow-step">
+                <strong>Bước 5:</strong> FE render từng <code>PoiCard</code> và gắn
+                badge khoảng cách ở góc phải trên.
+              </div>
+            </div>
+
+            <h3>Khác nhau giữa <code>/nearby</code> và <code>/map</code></h3>
+            <div class="grid-2">
+              <div class="card">
+                <h4><code>/nearby</code></h4>
+                <p>
+                  Tập trung trả lời “xung quanh tôi có gì”. Nó gọi backend để lọc
+                  theo bán kính và khoảng cách rồi chỉ hiển thị card/list.
+                </p>
+              </div>
+              <div class="card">
+                <h4><code>/map</code></h4>
+                <p>
+                  Tập trung trả lời “tôi đi đến POI này thế nào”. Nó tự tải POI,
+                  tự hiển thị bản đồ, rồi dùng OSRM để vẽ tuyến đường.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" id="poimap">
+            <h2><code>PoiMap</code> chạy như thế nào</h2>
+            <p>
+              <code>website-user/src/components/map/PoiMap.tsx</code> là component
+              render map thực tế. Đây là trung tâm của giao diện map trên web user.
+            </p>
+
+            <h3>1. Tạo nền bản đồ</h3>
+            <div class="stack">
+              <div class="stack-item">
+                Nếu có <code>VITE_MAPTILER_KEY</code>, component dùng style URL của
+                MapTiler: <code>streets-v2/style.json?key=...</code>.
+              </div>
+              <div class="stack-item">
+                Nếu không có key, component fallback sang style raster tự khai báo
+                dùng tile <code>https://tile.openstreetmap.org/{z}/{x}/{y}.png</code>.
+              </div>
+              <div class="stack-item">
+                Khi <code>maplibregl.Map</code> ném lỗi hoặc event <code>error</code>
+                chạy, component bật state <code>failed</code> và hiển thị khối fallback
+                “Không thể tải nền bản đồ”.
+              </div>
+            </div>
+
+            <h3>2. Render marker POI</h3>
+            <div class="stack">
+              <div class="stack-item">
+                Component lọc POI có <code>latitude</code> và <code>longitude</code> hợp lệ.
+              </div>
+              <div class="stack-item">
+                Mỗi POI được tạo một <code>maplibregl.Marker</code>. Marker đang chọn
+                có màu tối, marker còn lại có màu cam.
+              </div>
+              <div class="stack-item">
+                Popup không phải React component mà được dựng thủ công bằng
+                <code>document.createElement</code> trong hàm <code>popupContent</code>.
+              </div>
+              <div class="stack-item">
+                Popup có 2 hành động: “Chỉ đường” để gọi callback
+                <code>onSelectPoi</code> và “Xem chi tiết” để mở route
+                <code>#/poi/:id</code>.
+              </div>
+            </div>
+
+            <h3>3. Render marker người dùng</h3>
+            <p>
+              Khi có <code>userLocation</code>, component tạo thêm một marker màu
+              xanh ngọc với popup “Vị trí của bạn”. Marker này tách riêng khỏi danh
+              sách POI để có thể xóa/cập nhật độc lập.
+            </p>
+
+            <h3>4. Render tuyến đường</h3>
+            <p>
+              Tuyến đường được quản lý bằng 1 source GeoJSON
+              <code>user-route</code> và 1 line layer
+              <code>user-route-line</code>. Nếu route mới đến, component cập nhật
+              source; nếu route bị xóa, component gỡ layer và source ra khỏi map.
+            </p>
+
+            <h3>5. Tự canh vùng nhìn</h3>
+            <p>
+              Hàm <code>fitToCoordinates</code> được dùng ở hai chỗ:
+              khi chỉ có marker thì fit toàn bộ marker đang hiển thị;
+              khi đã có route thì fit theo toàn bộ polyline để user nhìn được
+              toàn bộ hành trình.
+            </p>
+
+            <h3>6. Dọn tài nguyên khi unmount</h3>
+            <p>
+              Effect khởi tạo map có cleanup để remove toàn bộ marker, remove map
+              instance và reset các ref. Phần này quan trọng vì map library thường
+              dễ bị memory leak nếu rời page mà không cleanup.
+            </p>
+          </section>
+
+          <section class="section" id="backend">
+            <h2>Backend map và nearby</h2>
+            <p>
+              Backend không trực tiếp render bản đồ, nhưng chịu trách nhiệm cho dữ
+              liệu location-related: nearby và map pack manifest.
+            </p>
+
+            <h3>Endpoint quan trọng</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Endpoint</th>
+                  <th>Vai trò</th>
+                  <th>Code chính</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>GET /api/v1/poi/nearby</code></td>
+                  <td>Trả danh sách POI trong bán kính yêu cầu.</td>
+                  <td><code>PoiController.Nearby</code> → <code>PoiService.NearbyAsync</code></td>
+                </tr>
+                <tr>
+                  <td><code>GET /api/v1/maps/pack-manifest</code></td>
+                  <td>Trả metadata của offline map pack đang active.</td>
+                  <td><code>MapsController.GetPackManifest</code> → <code>MapsService.GetPackManifestAsync</code></td>
+                </tr>
+                <tr>
+                  <td><code>GET /api/v1/maps/offline-pack</code></td>
+                  <td>Tạo file zip offline pack để tải về.</td>
+                  <td><code>MapsController.DownloadOfflinePack</code> → <code>MapsService.CreateOfflinePackAsync</code></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3><code>PoiService.NearbyAsync</code> làm gì</h3>
+            <div class="flow">
+              <div class="flow-step">
+                <strong>1.</strong> Validate latitude, longitude và radius.
+              </div>
+              <div class="flow-step">
+                <strong>2.</strong> Lấy toàn bộ public POI từ repository.
+              </div>
+              <div class="flow-step">
+                <strong>3.</strong> Tính khoảng cách từ user đến từng POI bằng
+                <code>DistanceHelper.CalculateDistanceMeters</code>.
+              </div>
+              <div class="flow-step">
+                <strong>4.</strong> Bỏ qua các POI nằm ngoài bán kính.
+              </div>
+              <div class="flow-step">
+                <strong>5.</strong> Map sang <code>NearbyPoiResponse</code> và gắn
+                thêm trường <code>DistanceMeters</code>.
+              </div>
+              <div class="flow-step">
+                <strong>6.</strong> Sắp xếp tăng dần theo khoảng cách rồi
+                <code>Take(limit)</code>.
+              </div>
+            </div>
+
+            <div class="note" style="margin-top: 18px">
+              Nearby là logic tính khoảng cách “theo đường chim bay” dựa trên tọa độ.
+              Nó không phải tuyến đường thật ngoài đường phố. Tuyến đường thật chỉ xuất
+              hiện ở <code>routeApi.ts</code> khi web gọi OSRM.
+            </div>
+          </section>
+
+          <section class="section" id="offline-pack">
+            <h2>Offline pack, admin và mobile</h2>
+            <p>
+              Đây là phần “liên quan đến map” nhưng không nằm trong render map web.
+              Nó phục vụ cho việc kiểm tra và phân phối gói dữ liệu bản đồ/offline.
+            </p>
+
+            <div class="grid-2">
+              <div class="card">
+                <h4>Admin maps page</h4>
+                <p>
+                  <code>website-admin/src/pages/MapsPage.tsx</code> gọi
+                  <code>mapsApi.getPackManifest</code> để hiện tên gói, version,
+                  trạng thái active, dung lượng, SHA256 và link tải.
+                </p>
+              </div>
+              <div class="card">
+                <h4>Mobile maps service</h4>
+                <p>
+                  Mobile gọi cùng endpoint manifest, sau đó tải zip offline pack về
+                  thư mục local nếu người dùng cần dùng map khi không có mạng.
+                </p>
+              </div>
+            </div>
+
+            <h3><code>MapsService.CreateOfflinePackAsync</code> tạo gì</h3>
+            <div class="flow">
+              <div class="flow-step">
+                <strong>1.</strong> Lấy map pack active hiện tại hoặc tạo thông tin mặc định.
+              </div>
+              <div class="flow-step">
+                <strong>2.</strong> Lấy tất cả public POI từ repository.
+              </div>
+              <div class="flow-step">
+                <strong>3.</strong> Biến POI thành payload gọn gồm tên, địa chỉ, tọa độ, priority.
+              </div>
+              <div class="flow-step">
+                <strong>4.</strong> Tạo file zip chứa <code>index.html</code>,
+                <code>pois.json</code> và <code>metadata.json</code>.
+              </div>
+              <div class="flow-step">
+                <strong>5.</strong> Trả file zip qua endpoint
+                <code>/api/v1/maps/offline-pack</code>.
+              </div>
+            </div>
+
+            <div class="note warning" style="margin-top: 18px">
+              Trên web user hiện tại, thông tin manifest mới chỉ được dùng để báo
+              “offline pack sẵn sàng” hay chưa. Web chưa tải và dùng pack đó để thay
+              thế hoàn toàn cho MapLibre online.
+            </div>
+          </section>
+
+          <section class="section" id="env">
+            <h2>Biến môi trường và điểm dễ lỗi</h2>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Biến / phụ thuộc</th>
+                  <th>Dùng ở đâu</th>
+                  <th>Nếu sai thì chuyện gì xảy ra</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>VITE_MAPTILER_KEY</code></td>
+                  <td><code>PoiMap.tsx</code></td>
+                  <td>Nếu key sai hoặc origin bị chặn, nền MapTiler lỗi; component có thể fallback UI lỗi hoặc dùng OSM nếu không truyền key.</td>
+                </tr>
+                <tr>
+                  <td><code>VITE_OSRM_BASE_URL</code></td>
+                  <td><code>routeApi.ts</code></td>
+                  <td>Không lấy được route nên trang vẫn có marker nhưng không có line chỉ đường.</td>
+                </tr>
+                <tr>
+                  <td><code>VITE_OSRM_PROFILE</code></td>
+                  <td><code>routeApi.ts</code></td>
+                  <td>Profile không hợp lệ sẽ làm OSRM trả lỗi hoặc không tìm thấy tuyến đường.</td>
+                </tr>
+                <tr>
+                  <td>Geolocation permission</td>
+                  <td><code>MapPage.tsx</code>, <code>NearbyPage.tsx</code></td>
+                  <td>Không có GPS thì nearby không gọi API và map không thể vẽ route từ vị trí thật.</td>
+                </tr>
+                <tr>
+                  <td>Tọa độ POI</td>
+                  <td>POI data từ backend</td>
+                  <td>POI thiếu lat/lng sẽ không có marker hoặc không thể chỉ đường.</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3>Các lỗi dễ hiểu nhầm</h3>
+            <div class="stack">
+              <div class="stack-item">
+                Có marker nhưng không có line route: thường do OSRM lỗi, chưa có GPS,
+                hoặc chưa chọn POI.
+              </div>
+              <div class="stack-item">
+                Nearby có kết quả nhưng map route không chạy: đây là bình thường nếu
+                backend nearby ổn nhưng OSRM hoặc geolocation ở trang map có vấn đề.
+              </div>
+              <div class="stack-item">
+                Map pack hiện ra ở admin/web nhưng bản đồ web vẫn online: cũng bình
+                thường vì manifest hiện chỉ là metadata, chưa phải cơ chế thay tile
+                renderer của public web.
+              </div>
+            </div>
+          </section>
+
+          <section class="section" id="doc-code">
+            <h2>Nên đọc code theo thứ tự nào</h2>
+            <p>
+              Nếu muốn hiểu nhanh phần map mà không bị loạn, nên đi theo đúng thứ tự
+              từ route đến page, rồi xuống API và backend.
+            </p>
+
+            <div class="flow">
+              <div class="flow-step">
+                <strong>1.</strong> Đọc <code>website-user/src/routes/AppRoutes.tsx</code>
+                để thấy route <code>/map</code> và <code>/nearby</code> được mount ở đâu.
+              </div>
+              <div class="flow-step">
+                <strong>2.</strong> Đọc <code>website-user/src/pages/MapPage.tsx</code>
+                để hiểu state, filter, GPS, route query và list POI.
+              </div>
+              <div class="flow-step">
+                <strong>3.</strong> Đọc <code>website-user/src/components/map/PoiMap.tsx</code>
+                để hiểu render marker, popup, user marker, route layer và cleanup.
+              </div>
+              <div class="flow-step">
+                <strong>4.</strong> Đọc <code>website-user/src/pages/NearbyPage.tsx</code>
+                để hiểu flow GPS → backend nearby → list kết quả.
+              </div>
+              <div class="flow-step">
+                <strong>5.</strong> Đọc <code>website-user/src/api/routeApi.ts</code>,
+                <code>poiApi.ts</code>, <code>mapsApi.ts</code> để thấy từng request đi đâu.
+              </div>
+              <div class="flow-step">
+                <strong>6.</strong> Đọc <code>backend/.../Controllers/PoiController.cs</code>,
+                <code>PoiService.cs</code>, <code>MapsController.cs</code>,
+                <code>MapsService.cs</code> để nối lại phần backend.
+              </div>
+              <div class="flow-step">
+                <strong>7.</strong> Nếu cần hiểu bề mặt quản trị hoặc offline, đọc tiếp
+                <code>website-admin/src/pages/MapsPage.tsx</code> và mobile
+                <code>MapsApiService.cs</code>.
+              </div>
+            </div>
+
+            <div class="footer">
+              Tài liệu này đi sâu riêng cho phần map. Để nhìn toàn cảnh hệ thống,
+              quay lại <a href="./project-overview.html">project-overview.html</a>.
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

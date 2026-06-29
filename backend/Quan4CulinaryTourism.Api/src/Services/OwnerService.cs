@@ -9,8 +9,12 @@ namespace Quan4CulinaryTourism.Api.Services;
 
 public class OwnerService
 {
+    private const int MinSubmissionGeofenceRadiusMeters = 20;
+    private const int MaxSubmissionGeofenceRadiusMeters = 1000;
+
     private readonly OwnerRegistrationRepository _ownerRegistrationRepository;
     private readonly OwnerSubmissionRepository _ownerSubmissionRepository;
+    private readonly CategoryRepository _categoryRepository;
     private readonly PoiRepository _poiRepository;
     private readonly PoiLocalizationRepository _poiLocalizationRepository;
     private readonly AnalyticsRepository _analyticsRepository;
@@ -18,12 +22,14 @@ public class OwnerService
     public OwnerService(
         OwnerRegistrationRepository ownerRegistrationRepository,
         OwnerSubmissionRepository ownerSubmissionRepository,
+        CategoryRepository categoryRepository,
         PoiRepository poiRepository,
         PoiLocalizationRepository poiLocalizationRepository,
         AnalyticsRepository analyticsRepository)
     {
         _ownerRegistrationRepository = ownerRegistrationRepository;
         _ownerSubmissionRepository = ownerSubmissionRepository;
+        _categoryRepository = categoryRepository;
         _poiRepository = poiRepository;
         _poiLocalizationRepository = poiLocalizationRepository;
         _analyticsRepository = analyticsRepository;
@@ -113,29 +119,30 @@ public class OwnerService
         CreateOwnerSubmissionRequest request,
         CancellationToken cancellationToken = default)
     {
+        var normalizedRequest = await NormalizeSubmissionRequestAsync(ownerId, request, cancellationToken);
         var entity = new OwnerSubmission
         {
             OwnerId = ownerId,
-            PoiId = request.PoiId,
-            SubmissionType = request.SubmissionType,
-            PoiName = request.PoiName,
-            Description = request.Description,
-            CategoryId = request.CategoryId,
-            Location = GeoLocationFactory.Create(request.Location.Longitude, request.Location.Latitude),
-            Address = request.Address,
-            Ward = request.Ward,
-            District = request.District,
-            City = request.City,
-            PriceRange = request.PriceRange,
-            Priority = request.Priority,
-            MapUrl = string.IsNullOrWhiteSpace(request.MapUrl) ? null : request.MapUrl.Trim(),
-            TtsScript = string.IsNullOrWhiteSpace(request.TtsScript) ? null : request.TtsScript.Trim(),
-            GeofenceRadiusMeters = request.GeofenceRadiusMeters,
-            AutoNarrationEnabled = request.AutoNarrationEnabled,
-            Images = request.Images,
-            OpeningHours = request.OpeningHours,
-            ContactInfo = request.ContactInfo,
-            Tags = request.Tags
+            PoiId = normalizedRequest.PoiId,
+            SubmissionType = normalizedRequest.SubmissionType,
+            PoiName = normalizedRequest.PoiName,
+            Description = normalizedRequest.Description,
+            CategoryId = normalizedRequest.CategoryId,
+            Location = GeoLocationFactory.Create(normalizedRequest.Location.Longitude, normalizedRequest.Location.Latitude),
+            Address = normalizedRequest.Address,
+            Ward = normalizedRequest.Ward,
+            District = normalizedRequest.District,
+            City = normalizedRequest.City,
+            PriceRange = normalizedRequest.PriceRange,
+            Priority = normalizedRequest.Priority,
+            MapUrl = normalizedRequest.MapUrl,
+            TtsScript = normalizedRequest.TtsScript,
+            GeofenceRadiusMeters = normalizedRequest.GeofenceRadiusMeters,
+            AutoNarrationEnabled = normalizedRequest.AutoNarrationEnabled,
+            Images = normalizedRequest.Images,
+            OpeningHours = normalizedRequest.OpeningHours,
+            ContactInfo = normalizedRequest.ContactInfo,
+            Tags = normalizedRequest.Tags
         };
 
         await _ownerSubmissionRepository.CreateAsync(entity, cancellationToken);
@@ -181,29 +188,30 @@ public class OwnerService
 
         if (entity.Status != SharedConstants.SubmissionPending)
         {
-            throw new ApiException("Chỉ được sửa submission đang pending.");
+            throw new ApiException("Chỉ được sửa đề xuất đang chờ duyệt.");
         }
 
-        entity.SubmissionType = request.SubmissionType;
-        entity.PoiId = request.PoiId;
-        entity.PoiName = request.PoiName;
-        entity.Description = request.Description;
-        entity.CategoryId = request.CategoryId;
-        entity.Location = GeoLocationFactory.Create(request.Location.Longitude, request.Location.Latitude);
-        entity.Address = request.Address;
-        entity.Ward = request.Ward;
-        entity.District = request.District;
-        entity.City = request.City;
-        entity.PriceRange = request.PriceRange;
-        entity.Priority = request.Priority;
-        entity.MapUrl = string.IsNullOrWhiteSpace(request.MapUrl) ? null : request.MapUrl.Trim();
-        entity.TtsScript = string.IsNullOrWhiteSpace(request.TtsScript) ? null : request.TtsScript.Trim();
-        entity.GeofenceRadiusMeters = request.GeofenceRadiusMeters;
-        entity.AutoNarrationEnabled = request.AutoNarrationEnabled;
-        entity.Images = request.Images;
-        entity.OpeningHours = request.OpeningHours;
-        entity.ContactInfo = request.ContactInfo;
-        entity.Tags = request.Tags;
+        var normalizedRequest = await NormalizeSubmissionRequestAsync(ownerId, request, cancellationToken);
+        entity.SubmissionType = normalizedRequest.SubmissionType;
+        entity.PoiId = normalizedRequest.PoiId;
+        entity.PoiName = normalizedRequest.PoiName;
+        entity.Description = normalizedRequest.Description;
+        entity.CategoryId = normalizedRequest.CategoryId;
+        entity.Location = GeoLocationFactory.Create(normalizedRequest.Location.Longitude, normalizedRequest.Location.Latitude);
+        entity.Address = normalizedRequest.Address;
+        entity.Ward = normalizedRequest.Ward;
+        entity.District = normalizedRequest.District;
+        entity.City = normalizedRequest.City;
+        entity.PriceRange = normalizedRequest.PriceRange;
+        entity.Priority = normalizedRequest.Priority;
+        entity.MapUrl = normalizedRequest.MapUrl;
+        entity.TtsScript = normalizedRequest.TtsScript;
+        entity.GeofenceRadiusMeters = normalizedRequest.GeofenceRadiusMeters;
+        entity.AutoNarrationEnabled = normalizedRequest.AutoNarrationEnabled;
+        entity.Images = normalizedRequest.Images;
+        entity.OpeningHours = normalizedRequest.OpeningHours;
+        entity.ContactInfo = normalizedRequest.ContactInfo;
+        entity.Tags = normalizedRequest.Tags;
 
         await _ownerSubmissionRepository.UpdateAsync(entity, cancellationToken);
         return ToResponse(entity);
@@ -264,11 +272,24 @@ public class OwnerService
         PoiId = entity.PoiId,
         SubmissionType = entity.SubmissionType,
         PoiName = entity.PoiName,
+        Description = entity.Description,
+        CategoryId = entity.CategoryId,
+        Latitude = entity.Location.Coordinates.Latitude,
+        Longitude = entity.Location.Coordinates.Longitude,
+        Address = entity.Address,
+        Ward = entity.Ward,
+        District = entity.District,
+        City = entity.City,
+        PriceRange = entity.PriceRange,
         Priority = entity.Priority,
         MapUrl = entity.MapUrl,
         TtsScript = entity.TtsScript,
         GeofenceRadiusMeters = entity.GeofenceRadiusMeters,
         AutoNarrationEnabled = entity.AutoNarrationEnabled,
+        Images = entity.Images,
+        OpeningHours = entity.OpeningHours,
+        ContactInfo = entity.ContactInfo,
+        Tags = entity.Tags,
         Status = entity.Status,
         AdminNote = entity.AdminNote,
         CreatedAt = entity.CreatedAt
@@ -283,5 +304,79 @@ public class OwnerService
 
         return string.IsNullOrWhiteSpace(localizedScript) ? null : localizedScript;
     }
+
+    private async Task<CreateOwnerSubmissionRequest> NormalizeSubmissionRequestAsync(
+        string ownerId,
+        CreateOwnerSubmissionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var submissionType = request.SubmissionType.Trim().ToLowerInvariant();
+        if (!SharedConstants.SubmissionTypes.Contains(submissionType))
+        {
+            throw new ApiException("Loại đề xuất không hợp lệ. Chỉ hỗ trợ create hoặc update.");
+        }
+
+        if (request.GeofenceRadiusMeters < MinSubmissionGeofenceRadiusMeters || request.GeofenceRadiusMeters > MaxSubmissionGeofenceRadiusMeters)
+        {
+            throw new ApiException($"Bán kính geofence phải trong khoảng {MinSubmissionGeofenceRadiusMeters}-{MaxSubmissionGeofenceRadiusMeters} mét.");
+        }
+
+        var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Trim(), cancellationToken);
+        if (category is null)
+        {
+            throw new ApiException("Danh mục không tồn tại.", StatusCodes.Status404NotFound);
+        }
+
+        string? poiId = string.IsNullOrWhiteSpace(request.PoiId) ? null : request.PoiId.Trim();
+        if (submissionType == "update")
+        {
+            if (poiId is null)
+            {
+                throw new ApiException("Đề xuất cập nhật bắt buộc phải có POI.");
+            }
+
+            var poi = await _poiRepository.GetByIdAsync(poiId, cancellationToken)
+                ?? throw new ApiException("POI cần cập nhật không tồn tại.", StatusCodes.Status404NotFound);
+            if (!string.Equals(poi.OwnerId, ownerId, StringComparison.Ordinal))
+            {
+                throw new ApiException("Bạn không thể cập nhật POI không thuộc quyền quản lý của mình.", StatusCodes.Status403Forbidden);
+            }
+        }
+        else
+        {
+            poiId = null;
+        }
+
+        return new CreateOwnerSubmissionRequest
+        {
+            SubmissionType = submissionType,
+            PoiId = poiId,
+            PoiName = request.PoiName.Trim(),
+            Description = request.Description.Trim(),
+            CategoryId = category.Id,
+            Location = request.Location,
+            Address = request.Address.Trim(),
+            Ward = request.Ward.Trim(),
+            District = request.District.Trim(),
+            City = request.City.Trim(),
+            PriceRange = request.PriceRange,
+            Priority = request.Priority,
+            MapUrl = TrimOrNull(request.MapUrl),
+            TtsScript = TrimOrNull(request.TtsScript),
+            GeofenceRadiusMeters = request.GeofenceRadiusMeters,
+            AutoNarrationEnabled = request.AutoNarrationEnabled,
+            Images = request.Images,
+            OpeningHours = request.OpeningHours,
+            ContactInfo = request.ContactInfo,
+            Tags = request.Tags
+                .Select(static tag => tag.Trim())
+                .Where(static tag => !string.IsNullOrWhiteSpace(tag))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList()
+        };
+    }
+
+    private static string? TrimOrNull(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 

@@ -1,5 +1,6 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import type { AxiosError } from 'axios';
+import { useAppStore } from '../store/appStore';
 import type { ApiResponse } from '../types/responses';
 
 const AUTH_TOKEN_KEY = 'q4-token';
@@ -31,6 +32,28 @@ function unwrap<T>(payload: ApiResponse<T>): T {
 
 function toError(error: unknown): Error {
   const axiosError = error as AxiosError<ApiResponse<unknown>>;
+  const status = axiosError.response?.status;
+  const requestUrl = axiosError.config?.url || '';
+  const hasStoredToken = Boolean(localStorage.getItem(AUTH_TOKEN_KEY));
+  const isAuthEntryRequest =
+    requestUrl.includes('/api/v1/auth/login') ||
+    requestUrl.includes('/api/v1/auth/register');
+
+  if (status === 401 && hasStoredToken && !isAuthEntryRequest) {
+    useAppStore.getState().logout();
+
+    if (typeof window !== 'undefined') {
+      const currentHashRoute = window.location.hash.replace(/^#/, '') || '/';
+      if (currentHashRoute.startsWith('/login')) {
+        return new Error(axiosError.response?.data?.message || axiosError.message || 'Phiên đăng nhập đã hết hạn.');
+      }
+
+      const next = currentHashRoute;
+      const encodedNext = encodeURIComponent(next || '/account');
+      window.location.replace(`/#/login?next=${encodedNext}&reason=session-expired`);
+    }
+  }
+
   const message =
     axiosError.response?.data?.message ||
     axiosError.message ||
@@ -74,4 +97,3 @@ export async function deleteData<T>(url: string): Promise<T> {
     throw toError(error);
   }
 }
-

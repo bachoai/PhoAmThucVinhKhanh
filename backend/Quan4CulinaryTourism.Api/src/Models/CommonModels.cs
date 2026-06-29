@@ -57,6 +57,7 @@ public static class SharedConstants
         public const string User = "User";
     }
 
+    public const string OwnerNone = "none";
     public const string OwnerPending = "pending";
     public const string OwnerApproved = "approved";
     public const string OwnerRejected = "rejected";

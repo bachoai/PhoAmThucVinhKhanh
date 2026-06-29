@@ -22,9 +22,10 @@ public class AuthService
         _jwtHelper = jwtHelper;
     }
 
-    public async Task<CurrentUserResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+    public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        var existing = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var existing = await _userRepository.GetByEmailAsync(normalizedEmail, cancellationToken);
         if (existing is not null)
         {
             throw new ApiException("Email đã tồn tại.");
@@ -32,16 +33,21 @@ public class AuthService
 
         var user = new User
         {
-            FullName = request.FullName,
-            Email = request.Email.ToLowerInvariant(),
+            FullName = request.FullName.Trim(),
+            Email = normalizedEmail,
             PasswordHash = _passwordHasher.HashPassword(request.Password),
-            PhoneNumber = request.PhoneNumber,
+            PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim(),
             Roles = [SharedConstants.UserRoles.User],
-            OwnerStatus = SharedConstants.OwnerPending
+            OwnerStatus = SharedConstants.OwnerNone,
+            LastLoginAt = DateTime.UtcNow
         };
 
         await _userRepository.CreateAsync(user, cancellationToken);
-        return ToCurrentUserResponse(user);
+        return new AuthResponse
+        {
+            Token = _jwtHelper.GenerateToken(user),
+            User = ToCurrentUserResponse(user)
+        };
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -81,17 +87,33 @@ public class AuthService
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new ApiException("Không tìm thấy người dùng.", StatusCodes.Status404NotFound);
 
+        if (user.Roles.Contains(SharedConstants.UserRoles.Owner) || user.OwnerStatus == SharedConstants.OwnerApproved)
+        {
+            throw new ApiException("Tài khoản này đã là đối tác.");
+        }
+
+        var pendingRegistration = await _ownerRegistrationRepository.GetLatestByUserIdAndStatusAsync(
+            user.Id,
+            SharedConstants.OwnerPending,
+            cancellationToken);
+        if (pendingRegistration is not null)
+        {
+            throw new ApiException("Bạn đã có yêu cầu đối tác đang chờ duyệt.");
+        }
+
         var registration = new OwnerRegistration
         {
             UserId = user.Id,
-            BusinessName = request.BusinessName,
-            BusinessAddress = request.BusinessAddress,
-            PhoneNumber = request.PhoneNumber,
-            Description = request.Description,
+            BusinessName = request.BusinessName.Trim(),
+            BusinessAddress = request.BusinessAddress.Trim(),
+            PhoneNumber = request.PhoneNumber.Trim(),
+            Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
             Status = SharedConstants.OwnerPending
         };
 
         await _ownerRegistrationRepository.CreateAsync(registration, cancellationToken);
+        user.OwnerStatus = SharedConstants.OwnerPending;
+        await _userRepository.UpdateAsync(user, cancellationToken);
         return new OwnerRegistrationResponse
         {
             Id = registration.Id,

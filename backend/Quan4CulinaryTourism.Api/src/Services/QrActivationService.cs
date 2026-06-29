@@ -156,12 +156,12 @@ public class QrActivationService
     private static string BuildDeepLink(QrActivation entity, PublicSiteSettings settings)
     {
         var baseUrl = string.IsNullOrWhiteSpace(settings.BaseUrl)
-            ? "http://localhost:5173"
+            ? "http://localhost:5174"
             : settings.BaseUrl.Trim();
 
         if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var siteUri))
         {
-            baseUrl = "http://localhost:5173";
+            baseUrl = "http://localhost:5174";
             siteUri = new Uri(baseUrl);
         }
 

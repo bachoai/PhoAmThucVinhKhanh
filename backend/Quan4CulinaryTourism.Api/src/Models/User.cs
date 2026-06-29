@@ -10,7 +10,7 @@ public class User : BaseDocument
     public List<string> Roles { get; set; } = [SharedConstants.UserRoles.User];
     public bool IsActive { get; set; } = true;
     public bool EmailVerified { get; set; }
-    public string OwnerStatus { get; set; } = SharedConstants.OwnerPending;
+    public string OwnerStatus { get; set; } = SharedConstants.OwnerNone;
     public DateTime? LastLoginAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

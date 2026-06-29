@@ -18,6 +18,12 @@ public class OwnerRegistrationRepository
     public async Task<OwnerRegistration?> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default) =>
         await _context.OwnerRegistrations.Find(x => x.UserId == userId).SortByDescending(x => x.CreatedAt).FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<OwnerRegistration?> GetLatestByUserIdAndStatusAsync(string userId, string status, CancellationToken cancellationToken = default) =>
+        await _context.OwnerRegistrations
+            .Find(x => x.UserId == userId && x.Status == status)
+            .SortByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public Task<List<OwnerRegistration>> GetByStatusAsync(string? status, CancellationToken cancellationToken = default)
     {
         var filter = string.IsNullOrWhiteSpace(status)

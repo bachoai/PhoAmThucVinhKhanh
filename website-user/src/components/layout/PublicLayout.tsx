@@ -13,7 +13,9 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
+import { audioApi } from '../../api/audioApi';
 import { healthApi } from '../../api/healthApi';
+import { LANGUAGE_OPTIONS } from '../../constants/languages';
 import { getCopy } from '../../i18n/copy';
 import { useAppStore } from '../../store/appStore';
 import type { Lang } from '../../types/responses';
@@ -31,6 +33,12 @@ export function PublicLayout() {
   } = useAppStore();
   const ui = getCopy(lang);
   const [open, setOpen] = useState(false);
+  const audioLanguagesQuery = useQuery({
+    queryKey: ['audio-languages'],
+    queryFn: audioApi.getLanguages,
+    retry: false,
+    staleTime: 300000,
+  });
   const healthQuery = useQuery({
     queryKey: ['api-health'],
     queryFn: healthApi.check,
@@ -51,6 +59,10 @@ export function PublicLayout() {
   const nav = hasRole(currentUser?.roles, 'Owner')
     ? [...baseNav, ['/owner', ui.nav.owner] as const]
     : baseNav;
+  const supportedLanguageCodes = new Set(
+    audioLanguagesQuery.data?.map((item) => item.code) ?? LANGUAGE_OPTIONS.map((item) => item.value),
+  );
+  const languageOptions = LANGUAGE_OPTIONS.filter((option) => supportedLanguageCodes.has(option.value));
 
   const healthOk = healthQuery.data?.mongoConnected && healthQuery.data.status === 'Healthy';
 
@@ -92,8 +104,11 @@ export function PublicLayout() {
               aria-label={ui.common.languageLabel}
               className="rounded-full bg-transparent px-2 py-2 text-sm font-semibold"
             >
-              <option value="vi">VI</option>
-              <option value="en">EN</option>
+              {languageOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
 
             <button

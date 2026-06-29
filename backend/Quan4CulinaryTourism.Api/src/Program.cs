@@ -24,9 +24,20 @@ builder.Services.Configure<TextToSpeechSettings>(builder.Configuration.GetSectio
 builder.Services.Configure<PublicSiteSettings>(builder.Configuration.GetSection(nameof(PublicSiteSettings)));
 
 var jwtSettings = builder.Configuration.GetSection(nameof(JwtSettings)).Get<JwtSettings>() ?? new JwtSettings();
+var defaultAdminSettings = builder.Configuration.GetSection("DefaultAdmin").Get<DefaultAdminSettings>() ?? new DefaultAdminSettings();
 if (!builder.Environment.IsDevelopment() && jwtSettings.SecretKey.StartsWith("__SET_", StringComparison.Ordinal))
 {
     throw new InvalidOperationException("JwtSettings:SecretKey must be configured outside source control.");
+}
+if (!builder.Environment.IsDevelopment() && jwtSettings.SecretKey.Length < 32)
+{
+    throw new InvalidOperationException("JwtSettings:SecretKey must be at least 32 characters long in non-development environments.");
+}
+if (!builder.Environment.IsDevelopment() &&
+    !string.IsNullOrWhiteSpace(defaultAdminSettings.Email) &&
+    string.IsNullOrWhiteSpace(defaultAdminSettings.Password))
+{
+    throw new InvalidOperationException("DefaultAdmin:Password must be configured in non-development environments when DefaultAdmin:Email is set.");
 }
 
 builder.Services.AddControllers();

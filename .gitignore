@@ -1,4 +1,6 @@
 # Local agent/tooling
+.git/
+.codegraph/
 .codex/
 .agents/
 
@@ -27,10 +29,12 @@ pnpm-debug.log*
 **/.env
 **/.env.*
 !**/.env.example
+tmp/
 
 # .NET / MAUI
 **/bin/
 **/obj/
+backend/**/_build_verify*/
 backend/Quan4CulinaryTourism.Api/wwwroot/uploads/
 
 # Test/coverage artifacts

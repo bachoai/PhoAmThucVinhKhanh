@@ -6,10 +6,10 @@
 
 ## Auth Rule
 
-- Public API: khong can token.
-- Admin API: can header `Authorization: Bearer <accessToken>` va role `Admin`.
-- Owner API: can header `Authorization: Bearer <accessToken>` va role `Owner`.
-- Authenticated user API: can Bearer token hop le, khong bat buoc role cu the.
+- Public API: không cần token.
+- Admin API: cần header `Authorization: Bearer <accessToken>` và role `Admin`.
+- Owner API: cần header `Authorization: Bearer <accessToken>` và role `Owner`.
+- Authenticated user API: cần Bearer token hợp lệ, không bắt buộc role cụ thể.
 
 ## Common Response Format
 
@@ -42,8 +42,8 @@
 - Co 2 login endpoint cho admin:
   - `POST /api/v1/auth/login`: login chung, frontend can tu kiem tra role.
   - `POST /api/v1/admin/auth/login`: login admin va se tra `403` neu tai khoan khong co role `Admin`.
-- `POST /api/v1/auth/register-owner` can token hop le, khong can role `Owner`.
-- `POST /api/v1/owner/register` lai can role `Owner`; endpoint nay chi phu hop khi user da duoc gan role `Owner`.
+- `POST /api/v1/auth/register-owner` cần token hợp lệ, không cần role `Owner`.
+- `POST /api/v1/owner/register` vẫn cần role `Owner`; endpoint này không phải flow đăng ký owner thông thường.
 
 ## Data Models
 
@@ -242,8 +242,8 @@
 - Access: Public
 - Request body: `RegisterRequest`
 - Query params: none
-- Response body: `ApiResponse<CurrentUserResponse>`
-- Notes: tao user role mac dinh `User`, `ownerStatus = pending`.
+- Response body: `ApiResponse<AuthResponse>`
+- Notes: tạo user role mặc định `User`, `ownerStatus = none`, và trả JWT ngay để frontend tự đăng nhập sau khi đăng ký.
 
 #### POST `/api/v1/auth/login`
 
@@ -267,7 +267,7 @@
 - Request body: `CreateOwnerRegistrationRequest`
 - Query params: none
 - Response body: `ApiResponse<OwnerRegistrationResponse>`
-- Notes: day la flow hop ly de user gui yeu cau owner.
+- Notes: đây là flow đúng để user gửi yêu cầu owner; backend chặn tạo trùng yêu cầu đang chờ duyệt và cập nhật `ownerStatus = pending`.
 
 ### Category
 
@@ -406,7 +406,7 @@
 - Request body: `CreateOwnerRegistrationRequest`
 - Query params: none
 - Response body: `ApiResponse<OwnerRegistrationResponse>`
-- Notes: route ton tai nhung yeu cau role `Owner`, nen khong phai flow dang ky owner thong thuong.
+- Notes: route tồn tại nhưng yêu cầu role `Owner`, nên không phải flow đăng ký owner thông thường.
 
 #### GET `/api/v1/owner/dashboard`
 

@@ -113,6 +113,10 @@ public class AdminService
     {
         var registration = await _ownerRegistrationRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new ApiException("Không tìm thấy đăng ký owner.", StatusCodes.Status404NotFound);
+        if (registration.Status != SharedConstants.OwnerPending)
+        {
+            throw new ApiException("Chỉ có thể duyệt yêu cầu đối tác đang chờ duyệt.");
+        }
         var user = await _userRepository.GetByIdAsync(registration.UserId, cancellationToken)
             ?? throw new ApiException("Không tìm thấy user.", StatusCodes.Status404NotFound);
 
@@ -135,11 +139,19 @@ public class AdminService
     {
         var registration = await _ownerRegistrationRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new ApiException("Không tìm thấy đăng ký owner.", StatusCodes.Status404NotFound);
+        if (registration.Status != SharedConstants.OwnerPending)
+        {
+            throw new ApiException("Chỉ có thể từ chối yêu cầu đối tác đang chờ duyệt.");
+        }
+        var user = await _userRepository.GetByIdAsync(registration.UserId, cancellationToken)
+            ?? throw new ApiException("Không tìm thấy user.", StatusCodes.Status404NotFound);
         registration.Status = SharedConstants.OwnerRejected;
         registration.AdminNote = request.AdminNote;
         registration.ReviewedAt = DateTime.UtcNow;
         registration.ReviewedBy = adminUserId;
+        user.OwnerStatus = SharedConstants.OwnerRejected;
         await _ownerRegistrationRepository.UpdateAsync(registration, cancellationToken);
+        await _userRepository.UpdateAsync(user, cancellationToken);
         await WriteAuditAsync(adminUserId, "reject_owner", "owner_registration", registration.Id, new Dictionary<string, object> { ["reason"] = request.AdminNote }, cancellationToken);
     }
 
@@ -151,11 +163,24 @@ public class AdminService
             PoiId = entity.PoiId,
             SubmissionType = entity.SubmissionType,
             PoiName = entity.PoiName,
+            Description = entity.Description,
+            CategoryId = entity.CategoryId,
+            Latitude = entity.Location.Coordinates.Latitude,
+            Longitude = entity.Location.Coordinates.Longitude,
+            Address = entity.Address,
+            Ward = entity.Ward,
+            District = entity.District,
+            City = entity.City,
+            PriceRange = entity.PriceRange,
             Priority = entity.Priority,
             MapUrl = entity.MapUrl,
             TtsScript = entity.TtsScript,
             GeofenceRadiusMeters = entity.GeofenceRadiusMeters,
             AutoNarrationEnabled = entity.AutoNarrationEnabled,
+            Images = entity.Images,
+            OpeningHours = entity.OpeningHours,
+            ContactInfo = entity.ContactInfo,
+            Tags = entity.Tags,
             Status = entity.Status,
             AdminNote = entity.AdminNote,
             CreatedAt = entity.CreatedAt
@@ -165,6 +190,10 @@ public class AdminService
     {
         var submission = await _ownerSubmissionRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new ApiException("Không tìm thấy submission.", StatusCodes.Status404NotFound);
+        if (submission.Status != SharedConstants.SubmissionPending)
+        {
+            throw new ApiException("Chỉ có thể duyệt đề xuất đang chờ duyệt.");
+        }
 
         if (submission.SubmissionType == "create")
         {
@@ -195,10 +224,19 @@ public class AdminService
             await _poiRepository.CreateAsync(poi, cancellationToken);
             submission.PoiId = poi.Id;
         }
-        else if (!string.IsNullOrWhiteSpace(submission.PoiId))
+        else if (submission.SubmissionType == "update")
         {
+            if (string.IsNullOrWhiteSpace(submission.PoiId))
+            {
+                throw new ApiException("Đề xuất cập nhật không có POI mục tiêu.");
+            }
+
             var poi = await _poiRepository.GetByIdAsync(submission.PoiId, cancellationToken)
                 ?? throw new ApiException("POI cần cập nhật không tồn tại.", StatusCodes.Status404NotFound);
+            if (!string.Equals(poi.OwnerId, submission.OwnerId, StringComparison.Ordinal))
+            {
+                throw new ApiException("Không thể duyệt cập nhật cho POI không thuộc owner đã gửi đề xuất.", StatusCodes.Status403Forbidden);
+            }
             poi.Name = submission.PoiName;
             poi.Description = submission.Description;
             poi.CategoryId = submission.CategoryId;
@@ -219,6 +257,10 @@ public class AdminService
             poi.Tags = submission.Tags;
             await _poiRepository.UpdateAsync(poi, cancellationToken);
         }
+        else
+        {
+            throw new ApiException("Loại đề xuất không hợp lệ.");
+        }
 
         submission.Status = SharedConstants.SubmissionApproved;
         submission.AdminNote = request.AdminNote;
@@ -232,6 +274,10 @@ public class AdminService
     {
         var submission = await _ownerSubmissionRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new ApiException("Không tìm thấy submission.", StatusCodes.Status404NotFound);
+        if (submission.Status != SharedConstants.SubmissionPending)
+        {
+            throw new ApiException("Chỉ có thể từ chối đề xuất đang chờ duyệt.");
+        }
         submission.Status = SharedConstants.SubmissionRejected;
         submission.AdminNote = request.AdminNote;
         submission.ReviewedAt = DateTime.UtcNow;

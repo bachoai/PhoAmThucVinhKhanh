@@ -118,7 +118,8 @@ export function AudioPlayer({ audioUrl, text, lang, onPlay, autoplay = false, lo
 
     autoStarted.current = true;
     void startNarration();
-  }, [autoplay, canUseTts, hasAudio, hasNarration, hasSpeechSynthesis, voiceChecked]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoplay, canUseTts, hasAudio, hasNarration, hasSpeechSynthesis, loading, voiceChecked]);
 
   if (!hasAudio && !hasNarration) {
     return (

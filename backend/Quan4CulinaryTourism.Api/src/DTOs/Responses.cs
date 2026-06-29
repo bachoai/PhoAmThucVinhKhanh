@@ -102,11 +102,24 @@ public class OwnerSubmissionResponse
     public string? PoiId { get; set; }
     public string SubmissionType { get; set; } = string.Empty;
     public string PoiName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string CategoryId { get; set; } = string.Empty;
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public string Address { get; set; } = string.Empty;
+    public string Ward { get; set; } = string.Empty;
+    public string District { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string PriceRange { get; set; } = string.Empty;
     public int Priority { get; set; }
     public string? MapUrl { get; set; }
     public string? TtsScript { get; set; }
     public int GeofenceRadiusMeters { get; set; }
     public bool AutoNarrationEnabled { get; set; }
+    public List<Quan4CulinaryTourism.Api.Models.PoiImage> Images { get; set; } = [];
+    public List<Quan4CulinaryTourism.Api.Models.OpeningHour> OpeningHours { get; set; } = [];
+    public Quan4CulinaryTourism.Api.Models.ContactInfo? ContactInfo { get; set; }
+    public List<string> Tags { get; set; } = [];
     public string Status { get; set; } = string.Empty;
     public string? AdminNote { get; set; }
     public DateTime CreatedAt { get; set; }

@@ -75,6 +75,21 @@ export interface PoiAudio {
   durationSeconds?: number;
 }
 
+export interface AudioLanguageResponse {
+  code: string;
+  name: string;
+}
+
+export interface AudioPackManifestResponse {
+  version: string;
+  generatedAt: string;
+  items: Array<{
+    poiId: string;
+    poiName: string;
+    audios: Array<{ lang: string; audioUrl: string; status: string }>;
+  }>;
+}
+
 export interface CurrentUser {
   id: string;
   fullName: string;
@@ -110,11 +125,24 @@ export interface OwnerSubmissionResponse {
   poiId?: string | null;
   submissionType: string;
   poiName: string;
+  description: string;
+  categoryId: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  ward: string;
+  district: string;
+  city: string;
+  priceRange: string;
   priority: number;
   mapUrl?: string | null;
   ttsScript?: string | null;
   geofenceRadiusMeters: number;
   autoNarrationEnabled: boolean;
+  images: PoiImage[];
+  openingHours: OpeningHour[];
+  contactInfo?: ContactInfo | null;
+  tags: string[];
   status: string;
   adminNote?: string | null;
   createdAt: string;
@@ -204,6 +232,17 @@ export interface QrActivationResponse {
   deepLink: string;
   isActive: boolean;
   updatedAt: string;
+}
+
+export interface MapPackResponse {
+  id: string;
+  version: string;
+  name: string;
+  downloadUrl: string;
+  sha256: string;
+  sizeBytes: number;
+  isActive: boolean;
+  publishedAt?: string | null;
 }
 
 export interface HealthResponse {
