@@ -6,6 +6,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repoRootWithSeparator = $repoRoot.TrimEnd('\', '/') + '\'
 $outputFile = [System.IO.Path]::GetFullPath($OutputPath)
 $outputDir = Split-Path -Parent $outputFile
 
@@ -25,6 +26,31 @@ $excludeDirectoryNames = @(
     'tmp'
 )
 
+function Get-RepoRelativePath {
+    param(
+        [string]$FullPath
+    )
+
+    $resolvedFullPath = [System.IO.Path]::GetFullPath($FullPath)
+    if ($resolvedFullPath.StartsWith($repoRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $resolvedFullPath.Substring($repoRoot.Length).TrimStart('\', '/')
+    }
+
+    return $resolvedFullPath
+}
+
+$outputDirRelative = $null
+if ($outputDir.StartsWith($repoRootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
+    $candidateOutputDir = $outputDir.Substring($repoRootWithSeparator.Length).TrimStart('\', '/')
+    if (-not [string]::IsNullOrWhiteSpace($candidateOutputDir)) {
+        $outputDirRelative = $candidateOutputDir -replace '/', '\'
+    }
+}
+
+if (Test-Path -LiteralPath $outputFile) {
+    Remove-Item -LiteralPath $outputFile -Force
+}
+
 function Should-ExcludeFile {
     param(
         [string]$RelativePath
@@ -32,14 +58,21 @@ function Should-ExcludeFile {
 
     $normalized = $RelativePath -replace '/', '\'
 
+    if ($outputDirRelative -and (
+        $normalized.Equals($outputDirRelative, [System.StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.StartsWith("$outputDirRelative\", [System.StringComparison]::OrdinalIgnoreCase)
+    )) {
+        return $true
+    }
+
     foreach ($segment in $normalized.Split('\')) {
         if ($excludeDirectoryNames -contains $segment) {
             return $true
         }
-    }
 
-    if ($normalized -match '^backend\\.*\\_build_verify[^\\]*(\\|$)') {
-        return $true
+        if ($segment.StartsWith('_build_verify', [System.StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
     }
 
     if ($normalized -like 'backend\Quan4CulinaryTourism.Api\wwwroot\uploads\*') {
@@ -58,26 +91,9 @@ function Should-ExcludeFile {
     return $false
 }
 
-function Get-RepoRelativePath {
-    param(
-        [string]$FullPath
-    )
-
-    $resolvedFullPath = [System.IO.Path]::GetFullPath($FullPath)
-    if ($resolvedFullPath.StartsWith($repoRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-        return $resolvedFullPath.Substring($repoRoot.Length).TrimStart('\', '/')
-    }
-
-    return $resolvedFullPath
-}
-
 $files = Get-ChildItem -LiteralPath $repoRoot -File -Recurse | Where-Object {
     $relativePath = Get-RepoRelativePath -FullPath $_.FullName
     -not (Should-ExcludeFile -RelativePath $relativePath)
-}
-
-if (Test-Path -LiteralPath $outputFile) {
-    Remove-Item -LiteralPath $outputFile -Force
 }
 
 Add-Type -AssemblyName System.IO.Compression

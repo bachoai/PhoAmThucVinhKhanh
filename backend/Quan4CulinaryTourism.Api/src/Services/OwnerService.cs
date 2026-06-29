@@ -12,7 +12,6 @@ public class OwnerService
     private const int MinSubmissionGeofenceRadiusMeters = 20;
     private const int MaxSubmissionGeofenceRadiusMeters = 1000;
 
-    private readonly OwnerRegistrationRepository _ownerRegistrationRepository;
     private readonly OwnerSubmissionRepository _ownerSubmissionRepository;
     private readonly CategoryRepository _categoryRepository;
     private readonly PoiRepository _poiRepository;
@@ -20,47 +19,17 @@ public class OwnerService
     private readonly AnalyticsRepository _analyticsRepository;
 
     public OwnerService(
-        OwnerRegistrationRepository ownerRegistrationRepository,
         OwnerSubmissionRepository ownerSubmissionRepository,
         CategoryRepository categoryRepository,
         PoiRepository poiRepository,
         PoiLocalizationRepository poiLocalizationRepository,
         AnalyticsRepository analyticsRepository)
     {
-        _ownerRegistrationRepository = ownerRegistrationRepository;
         _ownerSubmissionRepository = ownerSubmissionRepository;
         _categoryRepository = categoryRepository;
         _poiRepository = poiRepository;
         _poiLocalizationRepository = poiLocalizationRepository;
         _analyticsRepository = analyticsRepository;
-    }
-
-    public async Task<OwnerRegistrationResponse> RegisterAsync(
-        string userId,
-        CreateOwnerRegistrationRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var entity = new OwnerRegistration
-        {
-            UserId = userId,
-            BusinessName = request.BusinessName,
-            BusinessAddress = request.BusinessAddress,
-            PhoneNumber = request.PhoneNumber,
-            Description = request.Description
-        };
-
-        await _ownerRegistrationRepository.CreateAsync(entity, cancellationToken);
-        return new OwnerRegistrationResponse
-        {
-            Id = entity.Id,
-            UserId = entity.UserId,
-            BusinessName = entity.BusinessName,
-            BusinessAddress = entity.BusinessAddress,
-            PhoneNumber = entity.PhoneNumber,
-            Description = entity.Description,
-            Status = entity.Status,
-            CreatedAt = entity.CreatedAt
-        };
     }
 
     public async Task<OwnerDashboardResponse> GetDashboardAsync(

@@ -23,17 +23,18 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Frontend
-**/node_modules/
-**/dist/
+node_modules/
+dist/
 **/dist-ssr/
-**/.env
-**/.env.*
-!**/.env.example
+.env
+.env.*
+!.env.example
 tmp/
 
 # .NET / MAUI
-**/bin/
-**/obj/
+bin/
+obj/
+backend/_build_verify*/
 backend/**/_build_verify*/
 backend/Quan4CulinaryTourism.Api/wwwroot/uploads/
 

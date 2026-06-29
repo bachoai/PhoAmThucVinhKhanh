@@ -21,10 +21,6 @@ public class OwnerController : BaseApiController
         _claimsHelper = claimsHelper;
     }
 
-    [HttpPost("register")]
-    public Task<IActionResult> Register([FromBody] CreateOwnerRegistrationRequest request) =>
-        ExecuteAsync(() => _ownerService.RegisterAsync(_claimsHelper.GetUserId(User), request), "Gửi đăng ký owner thành công");
-
     [HttpGet("dashboard")]
     public Task<IActionResult> Dashboard() =>
         ExecuteAsync(() => _ownerService.GetDashboardAsync(_claimsHelper.GetUserId(User)), "Lấy dashboard owner thành công");

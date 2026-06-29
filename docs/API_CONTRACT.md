@@ -1,4 +1,4 @@
-# API Contract
+﻿# API Contract
 
 ## Base URL
 
@@ -6,10 +6,10 @@
 
 ## Auth Rule
 
-- Public API: không cần token.
-- Admin API: cần header `Authorization: Bearer <accessToken>` và role `Admin`.
-- Owner API: cần header `Authorization: Bearer <accessToken>` và role `Owner`.
-- Authenticated user API: cần Bearer token hợp lệ, không bắt buộc role cụ thể.
+- Public API: khĂ´ng cáº§n token.
+- Admin API: cáº§n header `Authorization: Bearer <accessToken>` vĂ  role `Admin`.
+- Owner API: cáº§n header `Authorization: Bearer <accessToken>` vĂ  role `Owner`.
+- Authenticated user API: cáº§n Bearer token há»£p lá»‡, khĂ´ng báº¯t buá»™c role cá»¥ thá»ƒ.
 
 ## Common Response Format
 
@@ -42,8 +42,7 @@
 - Co 2 login endpoint cho admin:
   - `POST /api/v1/auth/login`: login chung, frontend can tu kiem tra role.
   - `POST /api/v1/admin/auth/login`: login admin va se tra `403` neu tai khoan khong co role `Admin`.
-- `POST /api/v1/auth/register-owner` cần token hợp lệ, không cần role `Owner`.
-- `POST /api/v1/owner/register` vẫn cần role `Owner`; endpoint này không phải flow đăng ký owner thông thường.
+- `POST /api/v1/auth/register-owner` cáº§n token há»£p lá»‡, khĂ´ng cáº§n role `Owner`.
 
 ## Data Models
 
@@ -161,6 +160,9 @@
 }
 ```
 
+
+- `submissionType = "create"`: bo qua `poiId` hoac gui `null`.
+- `submissionType = "update"`: `poiId` bat buoc phai la POI cua owner hien tai, frontend nen lay tu `GET /api/v1/owner/pois`.
 ### Approve / Reject Request
 
 ```json
@@ -243,7 +245,7 @@
 - Request body: `RegisterRequest`
 - Query params: none
 - Response body: `ApiResponse<AuthResponse>`
-- Notes: tạo user role mặc định `User`, `ownerStatus = none`, và trả JWT ngay để frontend tự đăng nhập sau khi đăng ký.
+- Notes: táº¡o user role máº·c Ä‘á»‹nh `User`, `ownerStatus = none`, vĂ  tráº£ JWT ngay Ä‘á»ƒ frontend tá»± Ä‘Äƒng nháº­p sau khi Ä‘Äƒng kĂ½.
 
 #### POST `/api/v1/auth/login`
 
@@ -267,7 +269,7 @@
 - Request body: `CreateOwnerRegistrationRequest`
 - Query params: none
 - Response body: `ApiResponse<OwnerRegistrationResponse>`
-- Notes: đây là flow đúng để user gửi yêu cầu owner; backend chặn tạo trùng yêu cầu đang chờ duyệt và cập nhật `ownerStatus = pending`.
+- Notes: Ä‘Ă¢y lĂ  flow Ä‘Ăºng Ä‘á»ƒ user gá»­i yĂªu cáº§u owner; backend cháº·n táº¡o trĂ¹ng yĂªu cáº§u Ä‘ang chá» duyá»‡t vĂ  cáº­p nháº­t `ownerStatus = pending`.
 
 ### Category
 
@@ -400,14 +402,6 @@
 
 ### Owner
 
-#### POST `/api/v1/owner/register`
-
-- Access: Owner
-- Request body: `CreateOwnerRegistrationRequest`
-- Query params: none
-- Response body: `ApiResponse<OwnerRegistrationResponse>`
-- Notes: route tồn tại nhưng yêu cầu role `Owner`, nên không phải flow đăng ký owner thông thường.
-
 #### GET `/api/v1/owner/dashboard`
 
 - Access: Owner
@@ -416,13 +410,22 @@
 - Response body: `ApiResponse<OwnerDashboardResponse>`
 - Notes: thong ke cho owner.
 
+#### GET `/api/v1/owner/pois`
+
+- Access: Owner
+- Request body: none
+- Query params:
+  - `lang?`
+- Response body: `ApiResponse<OwnerManagedPoiResponse[]>`
+- Notes: chi tra POI co `OwnerId == currentUserId`; frontend owner dung endpoint nay de hien dropdown "Dia diem cua toi" khi gui submission `update`.
+
 #### POST `/api/v1/owner/submissions`
 
 - Access: Owner
 - Request body: `CreateOwnerSubmissionRequest`
 - Query params: none
 - Response body: `ApiResponse<OwnerSubmissionResponse>`
-- Notes: tao de xuat POI moi hoac cap nhat.
+- Notes: `create` co the bo qua `poiId`; `update` bat buoc co `poiId` hop le trong danh sach POI cua chinh owner.
 
 #### GET `/api/v1/owner/submissions`
 
@@ -446,7 +449,7 @@
 - Request body: `CreateOwnerSubmissionRequest`
 - Query params: none
 - Response body: `ApiResponse<OwnerSubmissionResponse>`
-- Notes: chi sua duoc submission dang `pending`.
+- Notes: chi sua duoc submission dang `pending`; neu la `update` backend van kiem tra `poiId` co thuoc owner hien tai hay khong.
 
 ### Admin
 
@@ -654,3 +657,4 @@
 - Query params: none
 - Response body: `ApiResponse<MapPackResponse | null>`
 - Notes: co the tra `data = null` neu chua co active map pack.
+

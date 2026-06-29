@@ -1,4 +1,4 @@
-# API Test Flow
+﻿# API Test Flow
 
 ## Preconditions
 
@@ -8,108 +8,74 @@
   - Email: `admin@quan4tourism.local`
   - Password: `Admin@123456`
 
-## Test Order
+## Smoke Flow
 
 1. `GET /api/health`
    - Muc tieu: xac nhan API va MongoDB healthy.
 
 2. `POST /api/v1/admin/auth/login`
-   - Muc tieu: lay `accessToken` admin dung cho cac buoc admin.
-   - Body:
+   - Muc tieu: lay `accessToken` admin dung cho cac buoc approve/reject.
 
-```json
-{
-  "email": "admin@quan4tourism.local",
-  "password": "Admin@123456"
-}
-```
+3. `POST /api/v1/auth/register`
+   - Muc tieu: tao user thuong de test flow owner/public.
 
-3. `GET /api/v1/categories`
-   - Muc tieu: xac nhan public category list.
+4. Kiem tra response `POST /api/v1/auth/register`
+   - Muc tieu: xac nhan backend tra JWT ngay sau dang ky de frontend public co the tu dang nhap.
 
-4. `POST /api/v1/categories`
-   - Muc tieu: tao category mau neu he thong chua co category de test POI.
+5. `POST /api/v1/auth/register-owner`
+   - Muc tieu: user thuong gui yeu cau owner.
+   - Luu lai `ownerRegistrationId`.
 
-5. `POST /api/v1/admin/pois`
-   - Muc tieu: tao POI bang token admin.
-   - Luu lai `poiId`.
+6. Goi lai `POST /api/v1/auth/register-owner` voi cung user.
+   - Muc tieu: xac nhan backend chan trung owner request dang `pending` va tra loi ro rang.
 
-6. `GET /api/v1/poi/load-all`
-   - Muc tieu: xac nhan POI vua tao xuat hien trong danh sach cong khai.
+7. `GET /api/v1/admin/owner-registrations?status=pending`
+   - Muc tieu: admin thay duoc owner request vua gui.
 
-7. `GET /api/v1/poi/nearby`
-   - Muc tieu: xac nhan truy van theo toa do.
-
-8. `POST /api/v1/auth/register`
-   - Muc tieu: tao user thuong de test flow owner.
+8. `PUT /api/v1/admin/owner-registrations/{id}/approve`
+   - Muc tieu: admin approve owner.
 
 9. `POST /api/v1/auth/login`
-   - Muc tieu: lay token cua user thuong.
+   - Muc tieu: login lai user da duoc approve de lay JWT moi chua role `Owner`.
 
-10. `POST /api/v1/auth/register-owner`
-    - Muc tieu: user thuong gui yeu cau owner.
-    - Luu lai `ownerRegistrationId`.
+10. `GET /api/v1/owner/dashboard` va `GET /api/v1/owner/pois`
+    - Muc tieu: xac nhan user da vao duoc khong gian owner; `owner/pois` ban dau co the rong.
 
-11. `GET /api/v1/admin/owner-registrations?status=pending`
-    - Muc tieu: admin thay duoc yeu cau vua gui.
+11. `POST /api/v1/owner/submissions`
+    - Muc tieu: tao submission `create` voi `poiId = null` hoac bo qua `poiId`.
+    - Luu lai `createSubmissionId`.
 
-12. `PUT /api/v1/admin/owner-registrations/{id}/approve`
-    - Muc tieu: approve owner.
+12. `PUT /api/v1/admin/submissions/{createSubmissionId}/approve`
+    - Muc tieu: admin approve submission `create`.
 
-13. `POST /api/v1/auth/login`
-    - Muc tieu: login lai user da duoc approve de token moi chua role `Owner`.
+13. `GET /api/v1/poi/load-all` va `GET /api/v1/owner/pois`
+    - Muc tieu: POI moi xuat hien o public web va trong danh sach POI cua owner.
 
 14. `POST /api/v1/owner/submissions`
-    - Muc tieu: owner tao submission.
-    - Luu lai `submissionId`.
+    - Muc tieu: tao submission `update` bang cach lay `poiId` tu `GET /api/v1/owner/pois`.
+    - Luu lai `updateSubmissionId`.
 
-15. `GET /api/v1/admin/submissions?status=pending`
-    - Muc tieu: admin thay submission cho phe duyet.
+15. `PUT /api/v1/admin/submissions/{updateSubmissionId}/approve`
+    - Muc tieu: admin approve submission `update`.
 
-16. `PUT /api/v1/admin/submissions/{id}/approve`
-    - Muc tieu: admin approve submission.
+16. Kiem tra lai `GET /api/v1/poi/{id}`
+    - Muc tieu: du lieu public da phan anh thay doi sau khi approve update.
 
-17. `POST /api/v1/admin/media/upload-image`
-    - Muc tieu: upload anh admin.
+17. Security checks
+    - Goi `POST /api/v1/owner/submissions` voi `submissionType = update` va `poiId` cua owner khac.
+    - Muc tieu: backend phai tra `403`.
 
-18. `POST /api/v1/admin/media/upload-audio`
-    - Muc tieu: upload audio admin.
+18. Admin re-approve / re-reject checks
+    - Goi lai `PUT /api/v1/admin/submissions/{id}/approve` hoac `reject` cho submission da xu ly.
+    - Muc tieu: backend phai tu choi vi submission khong con `pending`.
 
-19. `POST /api/v1/admin/pois/{poiId}/audio`
-    - Muc tieu: gan audio cho POI.
-
-20. `POST /api/v1/admin/pois/{poiId}/localizations`
-    - Muc tieu: tao ban dich.
-
-21. `GET /api/v1/admin/pois/{poiId}/localizations`
-    - Muc tieu: xac nhan localization da luu.
-
-22. `POST /api/v1/analytics/collect`
-    - Muc tieu: ghi nhan event `poi_viewed`, `audio_played`, `search_executed`.
-
-23. `GET /api/v1/admin/dashboard/stats`
-    - Muc tieu: xem tong quan dashboard admin.
-
-24. `GET /api/v1/admin/analytics/summary`
-    - Muc tieu: doi chieu thong ke analytics.
-
-25. `GET /api/v1/maps/pack-manifest`
-    - Muc tieu: kiem tra map pack neu da co du lieu.
-
-26. `GET /api/v1/audio/pack-manifest`
-    - Muc tieu: kiem tra audio pack manifest.
-
-## Suggested Test Data
-
-- Category code: `street-food`
-- Category name: `Street Food`
-- Price range: `$$`
-- Languages de test: `vi`, `en`
-- Analytics events: `poi_viewed`, `audio_played`, `search_executed`, `nearby_requested`
+19. Clean zip check
+    - Chay `powershell -ExecutionPolicy Bypass -File .\scripts\create-clean-zip.ps1 -OutputPath .\release\PhoAmThucVinhKhanh-clean.zip`.
+    - Muc tieu: zip khong chua `.git`, `.codegraph`, `.codex`, `.agents`, `node_modules`, `dist`, `bin`, `obj`, `tmp`, `_build_verify*`, `wwwroot/uploads`, real `.env*`, hoac zip cu trong `release`.
 
 ## Important Notes
 
-- Frontend admin nen dung `POST /api/v1/admin/auth/login` de dam bao chi tai khoan admin dang nhap duoc.
+- Frontend public phai dung `POST /api/v1/auth/register-owner`; khong con flow `POST /api/v1/owner/register`.
+- Submission `update` phai lay `poiId` tu `GET /api/v1/owner/pois`, khong cho nhap tay ID tren public web.
 - Sau khi approve owner, phai login lai tai khoan do de lay JWT moi chua role `Owner`.
 - `GET /api/v1/poi/load-all` hien tai khong tra metadata phan trang, frontend can tu xu ly.
-- `GET /api/v1/categories` chi tra category active.

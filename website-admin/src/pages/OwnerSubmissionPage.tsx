@@ -8,7 +8,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 
 export function OwnerSubmissionPage() {
   const { t } = useI18n();
-  const { notification } = App.useApp();
+  const { message, notification } = App.useApp();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<string | undefined>();
   const [submissionType, setSubmissionType] = useState<string | undefined>();
@@ -19,6 +19,9 @@ export function OwnerSubmissionPage() {
   const query = useQuery({ queryKey: ['submissions', status], queryFn: () => ownerApi.getSubmissions(status) });
   const approveMutation = useMutation({
     mutationFn: (id: string) => ownerApi.approveSubmission(id, {}),
+    onError: (error: Error) => {
+      message.error(error.message);
+    },
     onSuccess: () => {
       notification.success({ message: t('submission_approved') });
       queryClient.invalidateQueries({ queryKey: ['submissions'] });
@@ -26,6 +29,9 @@ export function OwnerSubmissionPage() {
   });
   const rejectMutation = useMutation({
     mutationFn: ({ id, adminNote }: { id: string; adminNote: string }) => ownerApi.rejectSubmission(id, { adminNote }),
+    onError: (error: Error) => {
+      message.error(error.message);
+    },
     onSuccess: () => {
       notification.success({ message: t('submission_rejected') });
       setRejectId(null);
@@ -64,19 +70,25 @@ export function OwnerSubmissionPage() {
               render: (_, record) => (
                 <Space>
                   <Button onClick={() => setDetailId(record.id)}>{t('details')}</Button>
-                  <Button
-                    type="primary"
-                    onClick={() =>
-                      Modal.confirm({
-                        title: t('approve_submission_confirm'),
-                        content: record.poiName,
-                        onOk: () => approveMutation.mutate(record.id),
-                      })
-                    }
-                  >
-                    {t('approve')}
-                  </Button>
-                  <Button danger onClick={() => setRejectId(record.id)}>{t('reject')}</Button>
+                  {record.status === 'pending' ? (
+                    <>
+                      <Button
+                        type="primary"
+                        onClick={() =>
+                          Modal.confirm({
+                            title: t('approve_submission_confirm'),
+                            content: record.poiName,
+                            onOk: () => approveMutation.mutate(record.id),
+                          })
+                        }
+                      >
+                        {t('approve')}
+                      </Button>
+                      <Button danger onClick={() => setRejectId(record.id)}>{t('reject')}</Button>
+                    </>
+                  ) : (
+                    <StatusBadge value={record.status} />
+                  )}
                 </Space>
               ),
             },

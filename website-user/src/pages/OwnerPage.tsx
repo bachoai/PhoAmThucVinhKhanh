@@ -152,11 +152,43 @@ function mapSubmissionToForm(submission: OwnerSubmissionResponse): CreateOwnerSu
   };
 }
 
+function mapPoiToForm(poi: OwnerManagedPoi): CreateOwnerSubmissionRequest {
+  return {
+    submissionType: 'update',
+    poiId: poi.id,
+    poiName: poi.name,
+    description: poi.description,
+    categoryId: poi.categoryId,
+    location: {
+      latitude: poi.latitude,
+      longitude: poi.longitude,
+    },
+    address: poi.address,
+    ward: poi.ward,
+    district: poi.district,
+    city: poi.city,
+    priceRange:
+      poi.priceRange === '$' || poi.priceRange === '$$' || poi.priceRange === '$$$'
+        ? poi.priceRange
+        : '$$',
+    priority: poi.priority,
+    mapUrl: poi.mapUrl || '',
+    ttsScript: poi.ttsScript || '',
+    geofenceRadiusMeters: poi.geofenceRadiusMeters,
+    autoNarrationEnabled: poi.autoNarrationEnabled,
+    images: poi.images || [],
+    openingHours: poi.openingHours || [],
+    contactInfo: poi.contactInfo || null,
+    tags: poi.tags || [],
+  };
+}
+
 export default function OwnerPage() {
   const queryClient = useQueryClient();
   const { lang } = useAppStore();
   const submissionFormRef = useRef<HTMLDivElement>(null);
   const [editingSubmissionId, setEditingSubmissionId] = useState<string | null>(null);
+
   const createEmptySubmissionForm = (): CreateOwnerSubmissionRequest => ({
     submissionType: 'create',
     poiId: '',
@@ -182,7 +214,10 @@ export default function OwnerPage() {
     contactInfo: null,
     tags: [],
   });
+
   const [submissionForm, setSubmissionForm] = useState<CreateOwnerSubmissionRequest>(createEmptySubmissionForm);
+  const [submissionNotice, setSubmissionNotice] = useState('');
+
   const dashboardQuery = useQuery({
     queryKey: ['owner-dashboard'],
     queryFn: ownerApi.dashboard,
@@ -210,43 +245,53 @@ export default function OwnerPage() {
       await queryClient.invalidateQueries({ queryKey: ['owner-submissions'] });
       setEditingSubmissionId(null);
       setSubmissionForm(createEmptySubmissionForm());
+      setSubmissionNotice('');
     },
   });
 
   const ownerPois = ownerPoisQuery.data || [];
   const submissions = submissionsQuery.data || [];
+  const isUpdateSubmission = submissionForm.submissionType === 'update';
+  const canSubmitSubmission =
+    !saveSubmissionMutation.isPending &&
+    (!isUpdateSubmission || (ownerPois.length > 0 && Boolean(submissionForm.poiId)));
+
+  const resetSubmissionEditor = () => {
+    setEditingSubmissionId(null);
+    setSubmissionForm(createEmptySubmissionForm());
+    setSubmissionNotice('');
+  };
 
   const beginUpdateSubmissionFromPoi = (poi: OwnerManagedPoi) => {
     setEditingSubmissionId(null);
-    setSubmissionForm({
-      submissionType: 'update',
-      poiId: poi.id,
-      poiName: poi.name,
-      description: poi.description,
-      categoryId: poi.categoryId,
-      location: {
-        latitude: poi.latitude,
-        longitude: poi.longitude,
-      },
-      address: poi.address,
-      ward: poi.ward,
-      district: poi.district,
-      city: poi.city,
-      priceRange:
-        poi.priceRange === '$' || poi.priceRange === '$$' || poi.priceRange === '$$$'
-          ? poi.priceRange
-          : '$$',
-      priority: poi.priority,
-      mapUrl: poi.mapUrl || '',
-      ttsScript: poi.ttsScript || '',
-      geofenceRadiusMeters: poi.geofenceRadiusMeters,
-      autoNarrationEnabled: poi.autoNarrationEnabled,
-      images: poi.images || [],
-      openingHours: poi.openingHours || [],
-      contactInfo: poi.contactInfo || null,
-      tags: poi.tags || [],
-    });
+    setSubmissionForm(mapPoiToForm(poi));
+    setSubmissionNotice('');
     submissionFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleSubmissionTypeChange = (value: string) => {
+    const nextSubmissionType = value === 'update' ? 'update' : 'create';
+    setSubmissionNotice('');
+    setSubmissionForm((current) => ({
+      ...current,
+      submissionType: nextSubmissionType,
+      poiId: nextSubmissionType === 'update' && ownerPois.some((poi) => poi.id === current.poiId) ? current.poiId : '',
+    }));
+  };
+
+  const handleUpdatePoiChange = (poiId: string) => {
+    setSubmissionNotice('');
+    if (!poiId) {
+      setSubmissionForm((current) => ({ ...current, poiId: '' }));
+      return;
+    }
+
+    const poi = ownerPois.find((item) => item.id === poiId);
+    if (!poi) {
+      return;
+    }
+
+    setSubmissionForm(mapPoiToForm(poi));
   };
 
   return (
@@ -296,8 +341,7 @@ export default function OwnerPage() {
           <button
             className="btn-secondary"
             onClick={() => {
-              setEditingSubmissionId(null);
-              setSubmissionForm(createEmptySubmissionForm());
+              resetSubmissionEditor();
               submissionFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
           >
@@ -341,10 +385,7 @@ export default function OwnerPage() {
               <button
                 type="button"
                 className="font-bold text-coral"
-                onClick={() => {
-                  setEditingSubmissionId(null);
-                  setSubmissionForm(createEmptySubmissionForm());
-                }}
+                onClick={resetSubmissionEditor}
               >
                 Hủy chế độ sửa
               </button>
@@ -355,30 +396,69 @@ export default function OwnerPage() {
             className="mt-6 grid gap-4 md:grid-cols-2"
             onSubmit={(event) => {
               event.preventDefault();
+              if (isUpdateSubmission) {
+                if (ownerPoisQuery.isError) {
+                  setSubmissionNotice((ownerPoisQuery.error as Error).message);
+                  return;
+                }
+
+                if (!ownerPois.length) {
+                  setSubmissionNotice('Bạn chưa có địa điểm nào để cập nhật.');
+                  return;
+                }
+
+                if (!submissionForm.poiId) {
+                  setSubmissionNotice('Vui lòng chọn địa điểm của bạn để gửi cập nhật.');
+                  return;
+                }
+              }
+
+              setSubmissionNotice('');
               saveSubmissionMutation.mutate({
                 ...submissionForm,
-                poiId: submissionForm.poiId || undefined,
+                poiId: isUpdateSubmission ? submissionForm.poiId || undefined : undefined,
               });
             }}
           >
             <Field label="Loại đề xuất">
               <select
                 value={submissionForm.submissionType}
-                onChange={(event) =>
-                  setSubmissionForm((current) => ({ ...current, submissionType: event.target.value }))
-                }
+                onChange={(event) => handleSubmissionTypeChange(event.target.value)}
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900"
               >
                 <option value="create">Tạo mới</option>
                 <option value="update">Cập nhật</option>
               </select>
             </Field>
-            <Field label="ID POI (nếu cập nhật)">
-              <TextInput
-                value={submissionForm.poiId}
-                onChange={(event) => setSubmissionForm((current) => ({ ...current, poiId: event.target.value }))}
-              />
-            </Field>
+
+            {isUpdateSubmission ? (
+              <div className="md:col-span-2">
+                <Field label="Địa điểm của tôi">
+                  <select
+                    value={submissionForm.poiId || ''}
+                    onChange={(event) => handleUpdatePoiChange(event.target.value)}
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <option value="">Chọn địa điểm của bạn</option>
+                    {ownerPois.map((poi) => (
+                      <option key={poi.id} value={poi.id}>
+                        {poi.name} - {poi.address}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                {ownerPoisQuery.isLoading ? (
+                  <p className="mt-2 text-sm text-slate-500">Đang tải danh sách địa điểm của bạn...</p>
+                ) : null}
+                {ownerPoisQuery.isError ? (
+                  <p className="mt-2 text-sm text-rose-700">{(ownerPoisQuery.error as Error).message}</p>
+                ) : null}
+                {!ownerPoisQuery.isLoading && !ownerPoisQuery.isError && ownerPois.length === 0 ? (
+                  <p className="mt-2 text-sm text-amber-700">Bạn chưa có địa điểm nào để cập nhật.</p>
+                ) : null}
+              </div>
+            ) : null}
+
             <Field label="Tên địa điểm">
               <TextInput
                 value={submissionForm.poiName}
@@ -559,13 +639,19 @@ export default function OwnerPage() {
               <span>Bật tự động thuyết minh</span>
             </label>
 
+            {submissionNotice ? (
+              <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800 md:col-span-2">
+                {submissionNotice}
+              </div>
+            ) : null}
+
             {saveSubmissionMutation.error ? (
               <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700 md:col-span-2">
                 {(saveSubmissionMutation.error as Error).message}
               </div>
             ) : null}
 
-            <button className="btn-primary justify-center md:col-span-2" disabled={saveSubmissionMutation.isPending}>
+            <button className="btn-primary justify-center md:col-span-2" disabled={!canSubmitSubmission}>
               {saveSubmissionMutation.isPending ? (
                 <LoaderCircle className="animate-spin" size={18} />
               ) : (
@@ -593,6 +679,7 @@ export default function OwnerPage() {
                   onEdit={() => {
                     setEditingSubmissionId(submission.id);
                     setSubmissionForm(mapSubmissionToForm(submission));
+                    setSubmissionNotice('');
                     submissionFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
                 />
