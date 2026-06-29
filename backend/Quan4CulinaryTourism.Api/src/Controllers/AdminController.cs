@@ -56,6 +56,11 @@ public class AdminController : BaseApiController
         ExecuteAsync(() => _adminService.RejectOwnerAsync(_claimsHelper.GetUserId(User), id, request), "Từ chối owner thành công");
 
     [Authorize(Roles = SharedConstants.UserRoles.Admin)]
+    [HttpDelete("owner-registrations/{id}/disable")]
+    public Task<IActionResult> DisableOwner(string id) =>
+        ExecuteAsync(() => _adminService.DisableOwnerAsync(_claimsHelper.GetUserId(User), id), "Vo hieu hoa owner thanh cong");
+
+    [Authorize(Roles = SharedConstants.UserRoles.Admin)]
     [HttpGet("submissions")]
     public Task<IActionResult> GetSubmissions([FromQuery] string? status) => ExecuteAsync(() => _adminService.GetSubmissionsAsync(status), "Lấy submissions thành công");
 

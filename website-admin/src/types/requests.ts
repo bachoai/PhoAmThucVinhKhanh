@@ -64,6 +64,11 @@ export interface UploadPoiAudioRequest {
   sourceType: string;
 }
 
+export interface GeneratePoiAudioRequest {
+  lang: string;
+  voiceName?: string;
+}
+
 export interface TourStopRequest {
   poiId: string;
   title?: string;

@@ -9,6 +9,8 @@ export const ownerApi = {
     axiosClient.put(`/api/v1/admin/owner-registrations/${id}/approve`, payload),
   rejectOwner: (id: string, payload: RejectRequest) =>
     axiosClient.put(`/api/v1/admin/owner-registrations/${id}/reject`, payload),
+  disableOwner: (id: string) =>
+    axiosClient.delete(`/api/v1/admin/owner-registrations/${id}/disable`),
   getSubmissions: (status?: string) =>
     axiosClient.get<never, OwnerSubmissionResponse[]>('/api/v1/admin/submissions', { params: { status } }),
   approveSubmission: (id: string, payload: ApproveRequest) =>

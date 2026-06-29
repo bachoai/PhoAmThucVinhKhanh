@@ -27,6 +27,11 @@ public class AudioController : BaseApiController
     public Task<IActionResult> UploadPoiAudio(string id, [FromForm] UploadPoiAudioRequest request, IFormFile? file) =>
         ExecuteAsync(() => _audioService.UploadOrSetAudioAsync(id, request, file), "Cập nhật audio thành công");
 
+    [Authorize(Roles = SharedConstants.UserRoles.Admin)]
+    [HttpPost($"{AppConstants.ApiVersionPrefix}/admin/pois/{{id}}/audio/generate")]
+    public Task<IActionResult> GeneratePoiAudio(string id, [FromBody] GeneratePoiAudioRequest request) =>
+        ExecuteAsync(() => _audioService.GeneratePoiAudioAsync(id, request), "Tạo audio từ nội dung lời nói thành công");
+
     [HttpGet($"{AppConstants.ApiVersionPrefix}/audio/pack-manifest")]
     public Task<IActionResult> GetPackManifest() => ExecuteAsync(() => _audioService.GetPackManifestAsync(), "Lấy audio manifest thành công");
 }

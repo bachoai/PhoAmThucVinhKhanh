@@ -9,11 +9,12 @@ import { SUPPORTED_LANGUAGES } from '../../utils/constants';
 import { audioSchema } from '../../utils/validators';
 
 interface AudioFormProps {
+  hideLanguage?: boolean;
   loading?: boolean;
   onSubmit: (values: UploadPoiAudioRequest, file?: File) => Promise<unknown>;
 }
 
-export function AudioForm({ loading, onSubmit }: AudioFormProps) {
+export function AudioForm({ hideLanguage = false, loading, onSubmit }: AudioFormProps) {
   const { t } = useI18n();
   const [file, setFile] = useState<File | undefined>();
   const { control, handleSubmit } = useForm<UploadPoiAudioRequest>({
@@ -28,7 +29,17 @@ export function AudioForm({ loading, onSubmit }: AudioFormProps) {
 
   return (
     <Form layout="vertical" onFinish={handleSubmit(async (values) => onSubmit(values, file))}>
-      <Controller name="lang" control={control} render={({ field }) => <Form.Item label={t('language')}><Select {...field} options={SUPPORTED_LANGUAGES.map((value) => ({ value, label: value.toUpperCase() }))} /></Form.Item>} />
+      {hideLanguage ? null : (
+        <Controller
+          name="lang"
+          control={control}
+          render={({ field }) => (
+            <Form.Item label={t('language')}>
+              <Select {...field} options={SUPPORTED_LANGUAGES.map((value) => ({ value, label: value.toUpperCase() }))} />
+            </Form.Item>
+          )}
+        />
+      )}
       <Controller name="audioUrl" control={control} render={({ field }) => <Form.Item label={t('audio_url')}><Input {...field} placeholder="Optional when uploading file" /></Form.Item>} />
       <Controller name="voiceName" control={control} render={({ field }) => <Form.Item label={t('voice_name')}><Input {...field} /></Form.Item>} />
       <Controller name="sourceType" control={control} render={({ field }) => <Form.Item label={t('source_type')}><Input {...field} /></Form.Item>} />

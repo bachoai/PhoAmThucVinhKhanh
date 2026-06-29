@@ -32,6 +32,13 @@ export function OwnerRegistrationPage() {
       queryClient.invalidateQueries({ queryKey: ['owner-registrations'] });
     },
   });
+  const disableMutation = useMutation({
+    mutationFn: (id: string) => ownerApi.disableOwner(id),
+    onSuccess: () => {
+      notification.success({ message: t('owner_disabled') });
+      queryClient.invalidateQueries({ queryKey: ['owner-registrations'] });
+    },
+  });
 
   const selectedRecord = (query.data ?? []).find((item) => item.id === detailId) ?? null;
 
@@ -65,24 +72,52 @@ export function OwnerRegistrationPage() {
             { title: t('status'), render: (_, record) => <StatusBadge value={record.status} /> },
             {
               title: t('actions'),
-              render: (_, record) => (
-                <Space>
-                  <Button onClick={() => setDetailId(record.id)}>{t('details')}</Button>
-                  <Button
-                    type="primary"
-                    onClick={() =>
-                      Modal.confirm({
-                        title: t('approve_owner_registration_confirm'),
-                        content: record.businessName,
-                        onOk: () => approveMutation.mutate(record.id),
-                      })
-                    }
-                  >
-                    {t('approve')}
-                  </Button>
-                  <Button danger onClick={() => setRejectId(record.id)}>{t('reject')}</Button>
-                </Space>
-              ),
+              render: (_, record) => {
+                if (record.status === 'rejected') {
+                  return <Button onClick={() => setDetailId(record.id)}>{t('details')}</Button>;
+                }
+
+                if (record.status === 'approved') {
+                  return (
+                    <Space>
+                      <Button onClick={() => setDetailId(record.id)}>{t('details')}</Button>
+                      <Button
+                        danger
+                        onClick={() =>
+                          Modal.confirm({
+                            title: t('disable_owner_registration_confirm'),
+                            content: record.businessName,
+                            okButtonProps: { danger: true, loading: disableMutation.isPending },
+                            onOk: () => disableMutation.mutate(record.id),
+                          })
+                        }
+                      >
+                        {t('disable_owner')}
+                      </Button>
+                    </Space>
+                  );
+                }
+
+                return (
+                  <Space>
+                    <Button onClick={() => setDetailId(record.id)}>{t('details')}</Button>
+                    <Button
+                      type="primary"
+                      onClick={() =>
+                        Modal.confirm({
+                          title: t('approve_owner_registration_confirm'),
+                          content: record.businessName,
+                          okButtonProps: { loading: approveMutation.isPending },
+                          onOk: () => approveMutation.mutate(record.id),
+                        })
+                      }
+                    >
+                      {t('approve')}
+                    </Button>
+                    <Button danger onClick={() => setRejectId(record.id)}>{t('reject')}</Button>
+                  </Space>
+                );
+              },
             },
           ]}
         />

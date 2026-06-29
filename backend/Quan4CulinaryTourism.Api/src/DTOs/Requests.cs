@@ -213,6 +213,14 @@ public class UploadPoiAudioRequest
     public string SourceType { get; set; } = "uploaded";
 }
 
+public class GeneratePoiAudioRequest
+{
+    [Required]
+    public string Lang { get; set; } = "vi";
+
+    public string? VoiceName { get; set; }
+}
+
 public class CollectAnalyticsRequest
 {
     [Required]

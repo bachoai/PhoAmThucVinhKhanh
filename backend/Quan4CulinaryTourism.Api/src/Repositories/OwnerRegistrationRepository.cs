@@ -38,6 +38,9 @@ public class OwnerRegistrationRepository
         await _context.OwnerRegistrations.ReplaceOneAsync(x => x.Id == entity.Id, entity, cancellationToken: cancellationToken);
     }
 
+    public Task DeleteAsync(string id, CancellationToken cancellationToken = default) =>
+        _context.OwnerRegistrations.DeleteOneAsync(x => x.Id == id, cancellationToken);
+
     public Task<long> CountPendingAsync(CancellationToken cancellationToken = default) =>
         _context.OwnerRegistrations.CountDocumentsAsync(x => x.Status == SharedConstants.OwnerPending, cancellationToken: cancellationToken);
 }

@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { UploadPoiAudioRequest } from '../types/requests';
+import type { GeneratePoiAudioRequest, UploadPoiAudioRequest } from '../types/requests';
 import type { AudioLanguageResponse, AudioPackManifestResponse, PoiAudioResponse } from '../types/responses';
 
 export const audioApi = {
@@ -16,5 +16,7 @@ export const audioApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+  generatePoiAudio: (id: string, payload: GeneratePoiAudioRequest) =>
+    axiosClient.post<never, PoiAudioResponse>(`/api/v1/admin/pois/${id}/audio/generate`, payload),
   getPackManifest: () => axiosClient.get<never, AudioPackManifestResponse>('/api/v1/audio/pack-manifest'),
 };

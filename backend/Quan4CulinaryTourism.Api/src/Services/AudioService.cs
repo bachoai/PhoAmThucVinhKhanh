@@ -49,14 +49,16 @@ public class AudioService
             return null;
         }
 
-        var localization = await _poiLocalizationRepository.GetByPoiAndLangAsync(poiId, normalizedLang, cancellationToken);
+        var localization = normalizedLang == "vi"
+            ? null
+            : await _poiLocalizationRepository.GetByPoiAndLangAsync(poiId, normalizedLang, cancellationToken);
         var narrationText = ResolveNarrationText(normalizedLang, poi, localization);
         var narrationSignature = ComputeNarrationSignature(normalizedLang, narrationText);
         var audio = await _poiAudioRepository.GetByPoiAndLangAsync(poiId, normalizedLang, cancellationToken);
 
         if (ShouldRegenerateGeneratedAudio(audio, narrationSignature))
         {
-            var regenerated = await GenerateNarrationAudioAsync(
+            var regenerated = await TryGenerateNarrationAudioAsync(
                 poi,
                 normalizedLang,
                 narrationText,
@@ -70,7 +72,7 @@ public class AudioService
 
         if (audio is null)
         {
-            var generated = await GenerateNarrationAudioAsync(
+            var generated = await TryGenerateNarrationAudioAsync(
                 poi,
                 normalizedLang,
                 narrationText,
@@ -129,6 +131,44 @@ public class AudioService
         return ToResponse(audio);
     }
 
+    public async Task<PoiAudioResponse> GeneratePoiAudioAsync(
+        string poiId,
+        GeneratePoiAudioRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedLang = NormalizeLanguage(request.Lang);
+        var poi = await _poiRepository.GetByIdAsync(poiId, cancellationToken)
+            ?? throw new ApiException("Không tìm thấy POI.", StatusCodes.Status404NotFound);
+
+        var localization = normalizedLang == "vi"
+            ? null
+            : await _poiLocalizationRepository.GetByPoiAndLangAsync(poiId, normalizedLang, cancellationToken);
+        var narrationText = ResolveNarrationText(normalizedLang, poi, localization);
+        if (string.IsNullOrWhiteSpace(narrationText))
+        {
+            throw new ApiException("Không có nội dung lời nói để tạo audio cho ngôn ngữ đã chọn.");
+        }
+
+        var generated = await _pythonTextToSpeechService.GenerateAudioAsync(
+            narrationText,
+            ResolveVoiceHint(normalizedLang, request.VoiceName),
+            cancellationToken);
+        if (generated is null)
+        {
+            throw new ApiException(
+                "Không thể tạo audio từ nội dung lời nói. Hãy kiểm tra cấu hình TTS của máy chủ.",
+                StatusCodes.Status500InternalServerError);
+        }
+
+        var narrationSignature = ComputeNarrationSignature(normalizedLang, narrationText);
+        return await SaveGeneratedNarrationAudioAsync(
+            poi,
+            normalizedLang,
+            narrationSignature,
+            generated,
+            cancellationToken);
+    }
+
     public async Task<object> GetPackManifestAsync(CancellationToken cancellationToken = default)
     {
         var pois = await _poiRepository.GetPublicPoisAsync(cancellationToken);
@@ -165,7 +205,7 @@ public class AudioService
         FileSizeBytes = audio.FileSizeBytes
     };
 
-    private async Task<PoiAudioResponse?> GenerateNarrationAudioAsync(
+    private async Task<PoiAudioResponse?> TryGenerateNarrationAudioAsync(
         Poi poi,
         string lang,
         string? narrationText,
@@ -185,28 +225,43 @@ public class AudioService
                 return null;
             }
 
-            var audio = new PoiAudio
-            {
-                PoiId = poi.Id,
-                Lang = lang,
-                AudioUrl = generated.PublicUrl,
-                VoiceName = generated.VoiceName,
-                SourceType = "python_tts",
-                NarrationSignature = narrationSignature,
-                Status = SharedConstants.AudioDone,
-                FileSizeBytes = generated.FileSizeBytes
-            };
-
-            await _poiAudioRepository.UpsertAsync(audio, cancellationToken);
-            poi.AudioStatus = SharedConstants.AudioDone;
-            await _poiRepository.UpdateAsync(poi, cancellationToken);
-            return ToResponse(audio);
+            return await SaveGeneratedNarrationAudioAsync(
+                poi,
+                lang,
+                narrationSignature,
+                generated,
+                cancellationToken);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Unable to auto-generate narration audio for POI {PoiId}", poi.Id);
             return null;
         }
+    }
+
+    private async Task<PoiAudioResponse> SaveGeneratedNarrationAudioAsync(
+        Poi poi,
+        string lang,
+        string? narrationSignature,
+        GeneratedAudioResult generated,
+        CancellationToken cancellationToken)
+    {
+        var audio = new PoiAudio
+        {
+            PoiId = poi.Id,
+            Lang = lang,
+            AudioUrl = generated.PublicUrl,
+            VoiceName = generated.VoiceName,
+            SourceType = "python_tts",
+            NarrationSignature = narrationSignature,
+            Status = SharedConstants.AudioDone,
+            FileSizeBytes = generated.FileSizeBytes
+        };
+
+        await _poiAudioRepository.UpsertAsync(audio, cancellationToken);
+        poi.AudioStatus = SharedConstants.AudioDone;
+        await _poiRepository.UpdateAsync(poi, cancellationToken);
+        return ToResponse(audio);
     }
 
     private static string NormalizeLanguage(string? lang)
@@ -223,8 +278,6 @@ public class AudioService
         if (lang == "vi")
         {
             return FirstNonEmpty(
-                localization?.TtsScript,
-                localization?.Description,
                 poi.TtsScript,
                 poi.Description);
         }
@@ -233,6 +286,9 @@ public class AudioService
             localization?.TtsScript,
             localization?.Description);
     }
+
+    private static string ResolveVoiceHint(string lang, string? voiceName) =>
+        string.IsNullOrWhiteSpace(voiceName) ? lang : voiceName.Trim();
 
     private static bool ShouldRegenerateGeneratedAudio(PoiAudio? audio, string? narrationSignature)
     {

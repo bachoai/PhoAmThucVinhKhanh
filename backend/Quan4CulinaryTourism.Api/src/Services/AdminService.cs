@@ -155,6 +155,29 @@ public class AdminService
         await WriteAuditAsync(adminUserId, "reject_owner", "owner_registration", registration.Id, new Dictionary<string, object> { ["reason"] = request.AdminNote }, cancellationToken);
     }
 
+    public async Task DisableOwnerAsync(string adminUserId, string id, CancellationToken cancellationToken = default)
+    {
+        var registration = await _ownerRegistrationRepository.GetByIdAsync(id, cancellationToken)
+            ?? throw new ApiException("KhĂ´ng tĂ¬m tháº¥y Ä‘Äƒng kĂ½ owner.", StatusCodes.Status404NotFound);
+        if (registration.Status != SharedConstants.OwnerApproved)
+        {
+            throw new ApiException("Chá»‰ cĂ³ thá»ƒ vĂ´ hiá»‡u hĂ³a Ä‘á»‘i tĂ¡c Ä‘Ă£ Ä‘Æ°á»£c duyá»‡t.");
+        }
+
+        var user = await _userRepository.GetByIdAsync(registration.UserId, cancellationToken)
+            ?? throw new ApiException("KhĂ´ng tĂ¬m tháº¥y user.", StatusCodes.Status404NotFound);
+
+        user.OwnerStatus = SharedConstants.OwnerNone;
+        user.Roles = user.Roles
+            .Where(role => !string.Equals(role, SharedConstants.UserRoles.Owner, StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _ownerRegistrationRepository.DeleteAsync(registration.Id, cancellationToken);
+        await WriteAuditAsync(adminUserId, "disable_owner", "owner_registration", registration.Id, new Dictionary<string, object> { ["userId"] = user.Id }, cancellationToken);
+    }
+
     public async Task<List<OwnerSubmissionResponse>> GetSubmissionsAsync(string? status, CancellationToken cancellationToken = default)
         => (await _ownerSubmissionRepository.GetByStatusAsync(status, cancellationToken)).Select(entity => new OwnerSubmissionResponse
         {
