@@ -22,6 +22,7 @@
   --qr-preview-shell: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.94) 100%);
   --qr-preview-card-bg: #ffffff;
   --qr-preview-card-border: rgba(203, 213, 225, 0.9);
+  --qr-preview-code-bg: #ffffff;
   --qr-preview-text: #0f172a;
   --qr-preview-muted: #475569;
   --qr-preview-subtle: #64748b;
@@ -53,6 +54,7 @@ body.theme-dark {
   --qr-preview-shell: linear-gradient(180deg, rgba(226, 232, 240, 0.12) 0%, rgba(148, 163, 184, 0.08) 100%);
   --qr-preview-card-bg: rgba(248, 250, 252, 0.98);
   --qr-preview-card-border: rgba(203, 213, 225, 0.9);
+  --qr-preview-code-bg: rgba(248, 250, 252, 0.98);
   --qr-preview-text: #0f172a;
   --qr-preview-muted: #334155;
   --qr-preview-subtle: #64748b;

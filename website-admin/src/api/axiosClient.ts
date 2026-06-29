@@ -4,8 +4,10 @@ import type { ApiResponse, ErrorResponse } from '../types/common';
 import { useAuthStore } from '../store/authStore';
 import { getAccessToken } from '../utils/token';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5163').replace(/\/$/, '');
+
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: API_BASE_URL,
   timeout: 15000,
 });
 

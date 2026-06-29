@@ -429,11 +429,25 @@ body.theme-light {
   padding: 20px;
 }
 
+.qr-preview-stage .ant-qrcode,
+.qr-preview-code .ant-qrcode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border: 1px solid var(--qr-preview-card-border);
+  border-radius: 20px;
+  background: var(--qr-preview-code-bg);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+}
+
 .qr-preview-stage svg,
-.qr-preview-code svg {
-  background: #ffffff;
+.qr-preview-code svg,
+.qr-preview-stage canvas,
+.qr-preview-code canvas {
+  display: block;
+  background: transparent;
   border-radius: 16px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
 }
 
 .qr-zone-header {

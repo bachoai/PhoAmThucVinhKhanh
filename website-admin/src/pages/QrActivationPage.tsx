@@ -12,6 +12,8 @@ import type { QrActivationResponse } from '../types/responses';
 import { formatDateTime } from '../utils/format';
 
 const ALL_ZONES = '__all_zones__';
+const QR_CODE_BACKGROUND = '#ffffff';
+const QR_CODE_COLOR = '#0f172a';
 
 function compareQrActivations(left: QrActivationResponse, right: QrActivationResponse) {
   return left.stopZone.localeCompare(right.stopZone)
@@ -449,7 +451,7 @@ export function QrActivationPage() {
             expandedRowRender: (record) => (
               <Space align="start" size="large" wrap className="qr-detail-preview">
                 <div className="qr-preview-code">
-                  <QRCode value={record.deepLink} type="svg" bgColor="#ffffff" />
+                  <QRCode value={record.deepLink} type="svg" bgColor={QR_CODE_BACKGROUND} color={QR_CODE_COLOR} />
                 </div>
                 <Space direction="vertical">
                   <Typography.Text strong>{record.deepLink}</Typography.Text>
@@ -499,7 +501,7 @@ export function QrActivationPage() {
                         }}
                       >
                         <div className="qr-preview-code" style={{ display: 'flex', justifyContent: 'center' }}>
-                          <QRCode value={record.deepLink} type="svg" size={112} bgColor="#ffffff" />
+                          <QRCode value={record.deepLink} type="svg" size={112} bgColor={QR_CODE_BACKGROUND} color={QR_CODE_COLOR} />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <div className="qr-preview-zone-label">{record.stopZone}</div>
@@ -551,7 +553,7 @@ export function QrActivationPage() {
         {previewingQr ? (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <div ref={qrImageRef} className="qr-preview-stage">
-              <QRCode value={previewingQr.deepLink} type="svg" size={240} bgColor="#ffffff" />
+              <QRCode value={previewingQr.deepLink} type="svg" size={240} bgColor={QR_CODE_BACKGROUND} color={QR_CODE_COLOR} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <Typography.Text strong>{previewingQr.title}</Typography.Text>

@@ -72,6 +72,61 @@ function fitToCoordinates(map: maplibregl.Map, coordinates: [number, number][]) 
   map.fitBounds(bounds, { padding: 56, maxZoom: 15, duration: 700 });
 }
 
+function bindHoverPopup(map: maplibregl.Map, marker: maplibregl.Marker, popup: maplibregl.Popup) {
+  const markerElement = marker.getElement();
+  let closeTimer: number | null = null;
+
+  const clearCloseTimer = () => {
+    if (closeTimer !== null) {
+      window.clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+  };
+
+  const ensurePopupHoverHandlers = () => {
+    const popupElement = popup.getElement();
+    if (!popupElement || popupElement.dataset.hoverBound === 'true') {
+      return;
+    }
+
+    popupElement.dataset.hoverBound = 'true';
+    popupElement.addEventListener('mouseenter', clearCloseTimer);
+    popupElement.addEventListener('mouseleave', () => {
+      closeTimer = window.setTimeout(() => {
+        if (!markerElement.matches(':hover')) {
+          popup.remove();
+        }
+      }, 120);
+    });
+  };
+
+  const openPopup = () => {
+    clearCloseTimer();
+    if (!popup.isOpen()) {
+      popup.setLngLat(marker.getLngLat()).addTo(map);
+    }
+    ensurePopupHoverHandlers();
+  };
+
+  const scheduleClose = () => {
+    clearCloseTimer();
+    closeTimer = window.setTimeout(() => {
+      const popupElement = popup.getElement();
+      if (!markerElement.matches(':hover') && !popupElement?.matches(':hover')) {
+        popup.remove();
+      }
+    }, 120);
+  };
+
+  markerElement.style.cursor = 'pointer';
+  markerElement.addEventListener('mouseover', openPopup);
+  markerElement.addEventListener('pointerenter', openPopup);
+  markerElement.addEventListener('mouseleave', scheduleClose);
+  markerElement.addEventListener('pointerleave', scheduleClose);
+  markerElement.addEventListener('mouseout', scheduleClose);
+  markerElement.addEventListener('click', openPopup);
+}
+
 export function PoiMap({
   pois,
   userLocation,
@@ -112,7 +167,10 @@ export function PoiMap({
     }
 
     return () => {
-      poiMarkersRef.current.forEach((marker) => marker.remove());
+      poiMarkersRef.current.forEach((marker) => {
+        marker.getPopup()?.remove();
+        marker.remove();
+      });
       poiMarkersRef.current = [];
       userMarkerRef.current?.remove();
       userMarkerRef.current = null;
@@ -127,16 +185,22 @@ export function PoiMap({
       return;
     }
 
-    poiMarkersRef.current.forEach((marker) => marker.remove());
+    poiMarkersRef.current.forEach((marker) => {
+      marker.getPopup()?.remove();
+      marker.remove();
+    });
     poiMarkersRef.current = [];
 
     const validPois = pois.filter((poi) => Number.isFinite(poi.latitude) && Number.isFinite(poi.longitude));
     validPois.forEach((poi) => {
+      const popup = new maplibregl.Popup({ offset: 22, closeButton: false, closeOnClick: false }).setDOMContent(
+        popupContent(poi, onSelectPoi),
+      );
       const marker = new maplibregl.Marker({ color: poi.id === selectedPoiId ? '#0f172a' : '#FF6B35' })
         .setLngLat([poi.longitude, poi.latitude])
-        .setPopup(new maplibregl.Popup({ offset: 22 }).setDOMContent(popupContent(poi, onSelectPoi)))
         .addTo(map);
 
+      bindHoverPopup(map, marker, popup);
       marker.getElement().addEventListener('click', () => onSelectPoi?.(poi.id));
       poiMarkersRef.current.push(marker);
     });
