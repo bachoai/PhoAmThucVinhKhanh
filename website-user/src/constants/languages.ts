@@ -13,4 +13,4 @@ export const LANGUAGE_OPTIONS: Array<{ value: Lang; label: string }> = [
   { value: 'ru', label: 'Russian' },
 ];
 
-export const UI_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS.filter((option) => option.value === 'vi' || option.value === 'en');
+export const UI_LANGUAGE_OPTIONS = LANGUAGE_OPTIONS;
