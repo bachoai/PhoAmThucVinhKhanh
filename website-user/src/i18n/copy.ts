@@ -11,6 +11,28 @@ export function normalizeUiLanguage(lang?: Lang | string): UiLanguage {
 
 const copy = {
   "vi": {
+    "categories": {
+      "street_food": "Ăn vặt",
+      "rice": "Cơm",
+      "noodles": "Bún / Phở / Mì",
+      "seafood": "Hải sản",
+      "coffee": "Cà phê",
+      "dessert": "Tráng miệng",
+      "drink": "Đồ uống",
+      "hotpot_bbq": "Lẩu / Nướng",
+      "vietnamese_food": "Món Việt",
+      "night_food": "Quán đêm",
+      "banh_mi": "Bánh mì",
+      "porridge_soup": "Cháo / Súp",
+      "snails": "Ốc & nghêu",
+      "tea_dessert": "Chè & trà",
+      "bakery": "Bánh & tiệm nướng",
+      "vegetarian": "Ăn chay",
+      "seafood_hotpot": "Lẩu hải sản",
+      "broken_rice": "Cơm tấm chuyên biệt",
+      "regional": "Đặc sản vùng miền",
+      "family_restaurant": "Quán gia đình"
+    },
     "common": {
       "all": "Tất cả",
       "search": "Tìm",
@@ -130,6 +152,28 @@ const copy = {
     }
   },
   "en": {
+    "categories": {
+      "street_food": "Snack",
+      "rice": "Rice",
+      "noodles": "Vermicelli / Pho / Noodles",
+      "seafood": "Seafood",
+      "coffee": "Coffee",
+      "dessert": "Dessert",
+      "drink": "Beverage",
+      "hotpot_bbq": "Hot pot / Grill",
+      "vietnamese_food": "Vietnamese dishes",
+      "night_food": "Night bar",
+      "banh_mi": "Bread",
+      "porridge_soup": "Porridge/Soup",
+      "snails": "Snails & clams",
+      "tea_dessert": "Tea & tea",
+      "bakery": "Cakes & bakeries",
+      "vegetarian": "Vegetarian",
+      "seafood_hotpot": "Seafood hot pot",
+      "broken_rice": "Specialized broken rice",
+      "regional": "Regional specialties",
+      "family_restaurant": "Family restaurant"
+    },
     "common": {
       "all": "All",
       "search": "Search",
@@ -249,6 +293,28 @@ const copy = {
     }
   },
   "zh": {
+    "categories": {
+      "street_food": "小吃",
+      "rice": "米",
+      "noodles": "粉丝/河粉/面条",
+      "seafood": "海鲜",
+      "coffee": "咖啡",
+      "dessert": "甜点",
+      "drink": "饮料",
+      "hotpot_bbq": "火锅/烧烤",
+      "vietnamese_food": "越南菜",
+      "night_food": "夜间酒吧",
+      "banh_mi": "面包",
+      "porridge_soup": "粥/汤",
+      "snails": "蜗牛和蛤蜊",
+      "tea_dessert": "茶与茶",
+      "bakery": "蛋糕和面包店",
+      "vegetarian": "素食",
+      "seafood_hotpot": "海鲜火锅",
+      "broken_rice": "专业碎米",
+      "regional": "地方特产",
+      "family_restaurant": "家庭餐厅"
+    },
     "common": {
       "all": "全部",
       "search": "搜索",
@@ -368,6 +434,28 @@ const copy = {
     }
   },
   "ja": {
+    "categories": {
+      "street_food": "スナック",
+      "rice": "米",
+      "noodles": "春雨 / フォー / 麺類",
+      "seafood": "シーフード",
+      "coffee": "コーヒー",
+      "dessert": "デザート",
+      "drink": "飲料",
+      "hotpot_bbq": "鍋・グリル",
+      "vietnamese_food": "ベトナム料理",
+      "night_food": "ナイトバー",
+      "banh_mi": "パン",
+      "porridge_soup": "お粥/スープ",
+      "snails": "カタツムリとアサリ",
+      "tea_dessert": "お茶＆お茶",
+      "bakery": "ケーキとベーカリー",
+      "vegetarian": "ベジタリアン",
+      "seafood_hotpot": "海鮮鍋",
+      "broken_rice": "特製砕米",
+      "regional": "郷土料理",
+      "family_restaurant": "ファミリーレストラン"
+    },
     "common": {
       "all": "すべて",
       "search": "検索",
@@ -487,6 +575,28 @@ const copy = {
     }
   },
   "ko": {
+    "categories": {
+      "street_food": "간식",
+      "rice": "쌀",
+      "noodles": "당면 / 포 / 국수",
+      "seafood": "해산물",
+      "coffee": "커피",
+      "dessert": "디저트",
+      "drink": "음료",
+      "hotpot_bbq": "냄비 / 그릴",
+      "vietnamese_food": "베트남 요리",
+      "night_food": "나이트 바",
+      "banh_mi": "빵",
+      "porridge_soup": "죽/국",
+      "snails": "달팽이 & 조개",
+      "tea_dessert": "차 & 차",
+      "bakery": "케이크 및 베이커리",
+      "vegetarian": "채식주의자",
+      "seafood_hotpot": "해산물 전골",
+      "broken_rice": "전문 깨진 쌀",
+      "regional": "지역 특산품",
+      "family_restaurant": "패밀리 레스토랑"
+    },
     "common": {
       "all": "모두",
       "search": "검색",
@@ -606,6 +716,28 @@ const copy = {
     }
   },
   "fr": {
+    "categories": {
+      "street_food": "Collation",
+      "rice": "Riz",
+      "noodles": "Vermicelles / Pho / Nouilles",
+      "seafood": "Fruit de mer",
+      "coffee": "Café",
+      "dessert": "Dessert",
+      "drink": "Boisson",
+      "hotpot_bbq": "Fondue chaude / Grill",
+      "vietnamese_food": "Plats vietnamiens",
+      "night_food": "Bar de nuit",
+      "banh_mi": "Pain",
+      "porridge_soup": "Bouillie/Soupe",
+      "snails": "Escargots et palourdes",
+      "tea_dessert": "Thé et thé",
+      "bakery": "Gâteaux et boulangeries",
+      "vegetarian": "Végétarien",
+      "seafood_hotpot": "Fondue aux fruits de mer",
+      "broken_rice": "Riz brisé spécialisé",
+      "regional": "Spécialités régionales",
+      "family_restaurant": "Restaurant familial"
+    },
     "common": {
       "all": "Tout",
       "search": "Recherche",
@@ -725,6 +857,28 @@ const copy = {
     }
   },
   "de": {
+    "categories": {
+      "street_food": "Snack",
+      "rice": "Reis",
+      "noodles": "Fadennudeln / Pho / Nudeln",
+      "seafood": "Meeresfrüchte",
+      "coffee": "Kaffee",
+      "dessert": "Nachtisch",
+      "drink": "Getränk",
+      "hotpot_bbq": "Hot Pot / Grill",
+      "vietnamese_food": "Vietnamesische Gerichte",
+      "night_food": "Nachtbar",
+      "banh_mi": "Brot",
+      "porridge_soup": "Brei/Suppe",
+      "snails": "Schnecken und Muscheln",
+      "tea_dessert": "Tee & Tee",
+      "bakery": "Kuchen und Bäckereien",
+      "vegetarian": "Vegetarier",
+      "seafood_hotpot": "Eintopf mit Meeresfrüchten",
+      "broken_rice": "Spezialisierter Bruchreis",
+      "regional": "Regionale Spezialitäten",
+      "family_restaurant": "Familienrestaurant"
+    },
     "common": {
       "all": "Alle",
       "search": "Suche",
@@ -844,6 +998,28 @@ const copy = {
     }
   },
   "es": {
+    "categories": {
+      "street_food": "Bocadillo",
+      "rice": "Arroz",
+      "noodles": "Fideos / Pho / Fideos",
+      "seafood": "Mariscos",
+      "coffee": "Café",
+      "dessert": "Postre",
+      "drink": "Bebida",
+      "hotpot_bbq": "Olla caliente / Parrilla",
+      "vietnamese_food": "platos vietnamitas",
+      "night_food": "bar nocturno",
+      "banh_mi": "Pan",
+      "porridge_soup": "Gachas/Sopa",
+      "snails": "Caracoles y almejas",
+      "tea_dessert": "Té y té",
+      "bakery": "Pasteles y panaderías",
+      "vegetarian": "Vegetariano",
+      "seafood_hotpot": "estofado de mariscos",
+      "broken_rice": "Arroz partido especializado",
+      "regional": "Especialidades regionales",
+      "family_restaurant": "restaurante familiar"
+    },
     "common": {
       "all": "Todo",
       "search": "Buscar",
@@ -963,6 +1139,28 @@ const copy = {
     }
   },
   "th": {
+    "categories": {
+      "street_food": "อาหารว่าง",
+      "rice": "ข้าว",
+      "noodles": "วุ้นเส้น/โพธิ์/ก๋วยเตี๋ยว",
+      "seafood": "อาหารทะเล",
+      "coffee": "กาแฟ",
+      "dessert": "ขนม",
+      "drink": "เครื่องดื่ม",
+      "hotpot_bbq": "กระติกน้ำร้อน/เตาย่าง",
+      "vietnamese_food": "อาหารเวียดนาม",
+      "night_food": "ไนท์บาร์",
+      "banh_mi": "ขนมปัง",
+      "porridge_soup": "ข้าวต้ม/ซุป",
+      "snails": "หอยทากและหอย",
+      "tea_dessert": "ชาและชา",
+      "bakery": "เค้กและเบเกอรี่",
+      "vegetarian": "มังสวิรัติ",
+      "seafood_hotpot": "หม้อไฟทะเล",
+      "broken_rice": "ข้าวหักพิเศษ",
+      "regional": "อาหารพิเศษประจำภูมิภาค",
+      "family_restaurant": "ร้านอาหารสำหรับครอบครัว"
+    },
     "common": {
       "all": "ทั้งหมด",
       "search": "ค้นหา",
@@ -1082,6 +1280,28 @@ const copy = {
     }
   },
   "ru": {
+    "categories": {
+      "street_food": "Закуска",
+      "rice": "Рис",
+      "noodles": "Вермишель / Фо / Лапша",
+      "seafood": "Морепродукты",
+      "coffee": "Кофе",
+      "dessert": "Десерт",
+      "drink": "Напиток",
+      "hotpot_bbq": "Горшок/Гриль",
+      "vietnamese_food": "Вьетнамские блюда",
+      "night_food": "Ночной бар",
+      "banh_mi": "Хлеб",
+      "porridge_soup": "Каша/Суп",
+      "snails": "Улитки и моллюски",
+      "tea_dessert": "Чай и чай",
+      "bakery": "Торты и выпечка",
+      "vegetarian": "Вегетарианец",
+      "seafood_hotpot": "Горшок с морепродуктами",
+      "broken_rice": "Специализированный дробленый рис",
+      "regional": "Региональные блюда",
+      "family_restaurant": "Семейный ресторан"
+    },
     "common": {
       "all": "Все",
       "search": "Поиск",
