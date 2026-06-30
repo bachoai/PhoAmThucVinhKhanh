@@ -13,7 +13,7 @@ import { Spinner } from '../components/common/Spinner';
 import { LANGUAGE_OPTIONS } from '../constants/languages';
 import { getCopy } from '../i18n/copy';
 import { useAppStore } from '../store/appStore';
-import { track } from '../utils/analytics';
+import { createPoiPageViewId, track, trackPoiView } from '../utils/analytics';
 import { poiImage } from '../utils/media';
 
 export default function PoiDetailPage() {
@@ -55,9 +55,10 @@ export default function PoiDetailPage() {
 
   useEffect(() => {
     if (id) {
-      track('poi_viewed', lang, id, source ? { source } : undefined);
+      const pageViewId = createPoiPageViewId(location.key, id, source);
+      void trackPoiView(lang, id, pageViewId, source);
     }
-  }, [id, lang, source]);
+  }, [id, location.key, source]);
 
   const supportedAudioLanguageCodes = new Set(
     audioLanguagesQuery.data?.map((item) => item.code) ?? LANGUAGE_OPTIONS.map((item) => item.value),

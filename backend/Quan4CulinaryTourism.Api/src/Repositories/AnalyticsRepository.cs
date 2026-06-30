@@ -22,6 +22,12 @@ public class AnalyticsRepository
     public Task<long> CountByEventNameAsync(string eventName, CancellationToken cancellationToken = default) =>
         _context.AnalyticsEvents.CountDocumentsAsync(x => x.EventName == eventName, cancellationToken: cancellationToken);
 
+    public Task<long> CountDistinctPageViewsByEventNameAsync(string eventName, CancellationToken cancellationToken = default) =>
+        CountDistinctKeysAsync(
+            Builders<AnalyticsEvent>.Filter.Eq(x => x.EventName, eventName),
+            CreateTrackedPageViewKeyExpression(),
+            cancellationToken);
+
     public Task<long> CountByEventNamesAsync(IEnumerable<string> eventNames, CancellationToken cancellationToken = default)
     {
         var names = eventNames.Distinct(StringComparer.Ordinal).ToList();
@@ -63,7 +69,7 @@ public class AnalyticsRepository
             .Group(new BsonDocument
             {
                 { "_id", "$PoiId" },
-                { "viewCount", CreateConditionalCountExpression(CreateEventEqualsExpression("poi_viewed")) },
+                { "viewPageViewKeys", CreateTrackedPageViewSetExpression(CreateEventEqualsExpression("poi_viewed")) },
                 { "visitorKeys", CreateTrackedUserSetExpression(CreateEventEqualsExpression("poi_viewed")) },
                 { "audioPlayCount", CreateConditionalCountExpression(CreateEventInExpression(AudioEventNames)) },
                 { "audioListenerKeys", CreateTrackedUserSetExpression(CreateEventInExpression(AudioEventNames)) },
@@ -72,7 +78,7 @@ public class AnalyticsRepository
             .Project(new BsonDocument
             {
                 { "_id", 1 },
-                { "viewCount", 1 },
+                { "viewCount", CreateDistinctTrackedKeyCountExpression("$viewPageViewKeys") },
                 { "audioPlayCount", 1 },
                 { "qrScanCount", 1 },
                 { "uniqueVisitorCount", CreateDistinctTrackedUserCountExpression("$visitorKeys") },
@@ -117,7 +123,7 @@ public class AnalyticsRepository
             .Group(new BsonDocument
             {
                 { "_id", BsonNull.Value },
-                { "viewCount", CreateConditionalCountExpression(CreateEventEqualsExpression("poi_viewed")) },
+                { "viewPageViewKeys", CreateTrackedPageViewSetExpression(CreateEventEqualsExpression("poi_viewed")) },
                 { "visitorKeys", CreateTrackedUserSetExpression(CreateEventEqualsExpression("poi_viewed")) },
                 { "audioPlayCount", CreateConditionalCountExpression(CreateEventInExpression(AudioEventNames)) },
                 { "audioListenerKeys", CreateTrackedUserSetExpression(CreateEventInExpression(AudioEventNames)) },
@@ -126,7 +132,7 @@ public class AnalyticsRepository
             .Project(new BsonDocument
             {
                 { "_id", 0 },
-                { "viewCount", 1 },
+                { "viewCount", CreateDistinctTrackedKeyCountExpression("$viewPageViewKeys") },
                 { "audioPlayCount", 1 },
                 { "qrScanCount", 1 },
                 { "uniqueVisitorCount", CreateDistinctTrackedUserCountExpression("$visitorKeys") },
@@ -149,8 +155,34 @@ public class AnalyticsRepository
         };
     }
 
-    public async Task<List<TopPoiAnalyticsResponse>> GetTopPoiViewsAsync(CancellationToken cancellationToken = default) =>
-        await GetTopByEventAsync("poi_viewed", cancellationToken);
+    public async Task<List<TopPoiAnalyticsResponse>> GetTopPoiViewsAsync(CancellationToken cancellationToken = default)
+    {
+        var results = await _context.AnalyticsEvents.Aggregate()
+            .Match(new BsonDocument
+            {
+                { "EventName", "poi_viewed" },
+                { "PoiId", new BsonDocument("$ne", BsonNull.Value) }
+            })
+            .Group(new BsonDocument
+            {
+                { "_id", "$PoiId" },
+                { "pageViewKeys", new BsonDocument("$addToSet", CreateTrackedPageViewKeyExpression()) }
+            })
+            .Project(new BsonDocument
+            {
+                { "_id", 1 },
+                { "count", CreateDistinctTrackedKeyCountExpression("$pageViewKeys") }
+            })
+            .Sort(new BsonDocument("count", -1))
+            .Limit(10)
+            .ToListAsync(cancellationToken);
+
+        return results.Select(item => new TopPoiAnalyticsResponse
+        {
+            PoiId = item["_id"].AsString,
+            Count = item["count"].ToInt64()
+        }).ToList();
+    }
 
     public async Task<List<TopPoiAnalyticsResponse>> GetTopAudioPlaysAsync(CancellationToken cancellationToken = default) =>
         await GetTopByEventsAsync(AudioEventNames, cancellationToken);
@@ -377,6 +409,14 @@ public class AnalyticsRepository
     private static BsonDocument CreateConditionalCountExpression(BsonValue condition) =>
         new("$sum", new BsonDocument("$cond", new BsonArray { condition, 1, 0 }));
 
+    private static BsonDocument CreateTrackedPageViewSetExpression(BsonValue condition) =>
+        new("$addToSet", new BsonDocument("$cond", new BsonArray
+        {
+            condition,
+            CreateTrackedPageViewKeyExpression(),
+            BsonNull.Value
+        }));
+
     private static BsonDocument CreateTrackedUserSetExpression(BsonValue condition) =>
         new("$addToSet", new BsonDocument("$cond", new BsonArray
         {
@@ -384,6 +424,28 @@ public class AnalyticsRepository
             CreateTrackedUserKeyExpression(),
             BsonNull.Value
         }));
+
+    private static BsonDocument CreateTrackedPageViewKeyExpression() =>
+        new("$let", new BsonDocument
+        {
+            {
+                "vars",
+                new BsonDocument
+                {
+                    { "pageViewId", new BsonDocument("$ifNull", new BsonArray { "$PageViewId", string.Empty }) },
+                    { "eventId", new BsonDocument("$toString", "$_id") }
+                }
+            },
+            {
+                "in",
+                new BsonDocument("$cond", new BsonArray
+                {
+                    new BsonDocument("$ne", new BsonArray { "$$pageViewId", string.Empty }),
+                    "$$pageViewId",
+                    "$$eventId"
+                })
+            }
+        });
 
     private static BsonDocument CreateTrackedUserKeyExpression() =>
         new("$let", new BsonDocument
@@ -412,20 +474,45 @@ public class AnalyticsRepository
             }
         });
 
-    private static BsonDocument CreateDistinctTrackedUserCountExpression(string inputArrayField) =>
+    private static BsonDocument CreateDistinctTrackedKeyCountExpression(string inputArrayField) =>
         new("$size", new BsonDocument("$filter", new BsonDocument
         {
             { "input", inputArrayField },
-            { "as", "userKey" },
+            { "as", "trackedKey" },
             {
                 "cond",
                 new BsonDocument("$and", new BsonArray
                 {
-                    new BsonDocument("$ne", new BsonArray { "$$userKey", BsonNull.Value }),
-                    new BsonDocument("$ne", new BsonArray { "$$userKey", string.Empty })
+                    new BsonDocument("$ne", new BsonArray { "$$trackedKey", BsonNull.Value }),
+                    new BsonDocument("$ne", new BsonArray { "$$trackedKey", string.Empty })
                 })
             }
         }));
+
+    private static BsonDocument CreateDistinctTrackedUserCountExpression(string inputArrayField) =>
+        CreateDistinctTrackedKeyCountExpression(inputArrayField);
+
+    private async Task<long> CountDistinctKeysAsync(
+        FilterDefinition<AnalyticsEvent> filter,
+        BsonValue keyExpression,
+        CancellationToken cancellationToken)
+    {
+        var result = await _context.AnalyticsEvents.Aggregate()
+            .Match(filter)
+            .Group(new BsonDocument
+            {
+                { "_id", BsonNull.Value },
+                { "trackedKeys", new BsonDocument("$addToSet", keyExpression) }
+            })
+            .Project(new BsonDocument
+            {
+                { "_id", 0 },
+                { "count", CreateDistinctTrackedKeyCountExpression("$trackedKeys") }
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return result?["count"].ToInt64() ?? 0;
+    }
 
     private static string? CreateTrackedUserKey(AnalyticsEvent item)
     {

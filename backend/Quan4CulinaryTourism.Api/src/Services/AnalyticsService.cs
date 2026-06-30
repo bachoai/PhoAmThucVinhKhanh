@@ -43,7 +43,7 @@ public class AnalyticsService
         var realtimeSnapshot = await _analyticsRepository.GetRealtimeSnapshotAsync(cancellationToken: cancellationToken);
         return new AnalyticsSummaryResponse
         {
-            PoiViewedCount = await _analyticsRepository.CountByEventNameAsync("poi_viewed", cancellationToken),
+            PoiViewedCount = await _analyticsRepository.CountDistinctPageViewsByEventNameAsync("poi_viewed", cancellationToken),
             AudioPlayedCount = await _analyticsRepository.CountByEventNamesAsync(["audio_played", "tts_played"], cancellationToken),
             SearchExecutedCount = await _analyticsRepository.CountByEventNameAsync("search_executed", cancellationToken),
             AverageListenDurationSeconds = await _analyticsRepository.GetAverageListenDurationSecondsAsync(cancellationToken),

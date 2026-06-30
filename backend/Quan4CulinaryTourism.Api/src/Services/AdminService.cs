@@ -52,7 +52,7 @@ public class AdminService
             TotalActivePois = totalActivePois,
             PendingOwnerRegistrations = await _ownerRegistrationRepository.CountPendingAsync(cancellationToken),
             PendingSubmissions = await _ownerSubmissionRepository.CountPendingAsync(cancellationToken),
-            TotalPoiViews = await _analyticsRepository.CountByEventNameAsync("poi_viewed", cancellationToken),
+            TotalPoiViews = await _analyticsRepository.CountDistinctPageViewsByEventNameAsync("poi_viewed", cancellationToken),
             TotalAudioPlays = await _analyticsRepository.CountByEventNamesAsync(["audio_played", "tts_played"], cancellationToken),
             ActiveVisitorsNow = realtimeSnapshot.ActiveVisitorCount,
             AnonymousVisitorsNow = realtimeSnapshot.AnonymousVisitorCount,
