@@ -96,7 +96,7 @@ export function PublicLayout() {
           <div className="flex items-center gap-2">
             <select
               value={lang}
-              onChange={(event) => setLang(event.target.value === 'en' ? 'en' : 'vi')}
+              onChange={(event) => setLang(event.target.value as any)}
               aria-label={ui.common.languageLabel}
               className="rounded-full bg-transparent px-2 py-2 text-sm font-semibold"
             >

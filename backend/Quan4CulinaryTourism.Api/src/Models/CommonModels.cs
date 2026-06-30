@@ -82,7 +82,7 @@ public static class SharedConstants
     public const string AudioTaskCancelled = "cancelled";
 
     public static readonly string[] PriceRanges = ["$", "$$", "$$$"];
-    public static readonly string[] SupportedUiLanguages = ["vi", "en"];
+    public static readonly string[] SupportedUiLanguages = ["vi", "en", "zh", "ja", "ko", "fr", "de", "es", "th", "ru"];
     public static readonly string[] SupportedLanguages = ["vi", "en", "zh", "ja", "ko", "fr", "de", "es", "th", "ru"];
     public static readonly Dictionary<string, string> SupportedLanguageNames = new(StringComparer.OrdinalIgnoreCase)
     {
