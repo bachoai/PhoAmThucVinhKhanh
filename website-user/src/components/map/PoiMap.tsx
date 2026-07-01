@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import type { RouteGeometry } from '../../api/routeApi';
 import type { Poi } from '../../types/responses';
@@ -11,9 +11,9 @@ const mapStyle: string | maplibregl.StyleSpecification = mapTilerKey
       sources: {
         osm: {
           type: 'raster',
-          tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+          tiles: ['https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'],
           tileSize: 256,
-          attribution: 'Â© OpenStreetMap contributors',
+          attribution: '© OpenStreetMap contributors, © CARTO',
         },
       },
       layers: [{ id: 'osm', type: 'raster', source: 'osm' }],

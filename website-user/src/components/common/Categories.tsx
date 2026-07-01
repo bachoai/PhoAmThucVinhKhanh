@@ -34,7 +34,8 @@ export function Categories({
           onClick={() => onSelect?.(category.id)}
           className={`pill whitespace-nowrap ${selected === category.id ? 'border-coral bg-orange-50 text-coral dark:bg-orange-500/15' : 'hover:border-teal'}`}
         >
-          {category.name}
+          {/* Use localized category name, fallback to backend name */}
+          {(ui as any).categories?.[category.code] || category.name}
         </button>
       ))}
     </div>
